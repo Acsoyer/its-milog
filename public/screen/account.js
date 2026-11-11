@@ -57,11 +57,11 @@ const cityGroups = new Map();
 for (const city of CITIES) {
   if (!cityGroups.has(city.group)) {
     const group = document.createElement('optgroup');
-    group.label = regionNames[city.group] ?? city.group;
+    group.label = milogLanguage === 'tr' ? city.group : regionNames[city.group] ?? city.group;
     citySelect.append(group);
     cityGroups.set(city.group, group);
   }
-  cityGroups.get(city.group).append(new Option(cityNames[city.id] ?? city.name, city.id));
+  cityGroups.get(city.group).append(new Option(milogLanguage === 'tr' ? city.name : cityNames[city.id] ?? city.name, city.id));
 }
 citySelect.value = localStorage.getItem('milog-sky-city') || initialCity;
 
@@ -108,6 +108,7 @@ document.querySelector('#settings-mobile-view').addEventListener('click', () => 
 profileTheme.value = localStorage.getItem('milog-web-theme') === 'dark' ? 'dark' : 'light';
 function updateTheme() {
   phone.classList.toggle('theme-dark', profileTheme.value === 'dark');
+  document.documentElement.classList.toggle('milog-dark', profileTheme.value === 'dark');
 }
 profileTheme.addEventListener('change', () => {
   localStorage.setItem('milog-web-theme', profileTheme.value);
@@ -146,11 +147,13 @@ document.querySelector('#profile-account').addEventListener('click', () => {
   openWorkPanel(webAccount);
 });
 
+document.querySelector('#web-account-back').addEventListener('click', () => { webAccount.close(); openWorkPanel(drawer); });
+
 function openLogDetail(log) {
   currentDetail = log;
   const date = new Date(log.created_at);
-  document.querySelector('#detail-time').textContent = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  document.querySelector('#detail-date').textContent = date.toLocaleDateString('en-GB', { dateStyle: 'full' });
+  document.querySelector('#detail-time').textContent = date.toLocaleTimeString(milogLocale, { hour: '2-digit', minute: '2-digit' });
+  document.querySelector('#detail-date').textContent = date.toLocaleDateString(milogLocale, { dateStyle: 'full' });
   document.querySelector('#detail-body').textContent = log.body;
   document.querySelector('#detail-status').textContent = '';
   const attachments = document.querySelector('#detail-attachments');
@@ -158,7 +161,7 @@ function openLogDetail(log) {
   for (const [field, bucket, tag] of [['image_path', 'log-images', 'img'], ['audio_path', 'log-audio', 'audio']]) {
     if (!log[field]) continue;
     client.storage.from(bucket).createSignedUrl(log[field], 300).then(({ data }) => {
-      if (!data || currentDetail !== log || !detail.open) return;
+      if (!data || currentDetail !== log || !isEntryDetailVisible()) return;
       const media = document.createElement(tag);
       media.src = data.signedUrl;
       if (tag === 'img') media.alt = 'Entry photo';
@@ -167,7 +170,8 @@ function openLogDetail(log) {
     });
   }
   refreshDetailActions();
-  openWorkPanel(detail);
+  if (desktopMode()) showDesktopEntryPreview();
+  else openWorkPanel(detail);
 }
 function entryFlag(log, flag) {
   return 'milog-entry:' + activeSession?.user.id + ':' + log.id + ':' + flag;
@@ -208,7 +212,7 @@ document.querySelector('#detail-share').addEventListener('click', async () => {
 });
 document.querySelector('#detail-edit').addEventListener('click', () => {
   editedLog = currentDetail;
-  detail.close();
+  closeEntryDetail();
   openComposeEditor(editedLog.body, editedLog.created_at);
   document.querySelector('#compose-title').textContent = 'Edit entry';
 });
@@ -225,7 +229,7 @@ document.querySelector('#detail-delete').addEventListener('click', async (event)
     document.querySelector('#detail-status').textContent = 'Could not delete entry.';
     return;
   }
-  detail.close();
+  closeEntryDetail();
   await showTimeline(session);
   if (calendar.open) renderCalendar();
 });
@@ -258,10 +262,12 @@ function showAccount() {
   desktopMarkedLog = null;
   desktopMonth = null;
   inlineDate = undefined;
+  inlineEnd = null;
   document.querySelector('#desk-search').value = '';
   renderDesktopSearch();
-  document.querySelector('#desk-inline').reset();
-  clearEntryTools(document.querySelector('#desk-inline'));
+  document.querySelector('#desk-inline-form').reset();
+  closeEntryDetail();
+  clearEntryTools(document.querySelector('#desk-inline-form'));
   refreshInlineDirty();
   document.querySelector('#desk-shortcuts').replaceChildren();
   document.documentElement.classList.remove('milog-signed-in');
@@ -293,7 +299,7 @@ function dateHeading(date) {
   meta.className = 'date-meta';
   for (const part of ['month', 'weekday']) {
     const label = document.createElement('span');
-    label.textContent = date.toLocaleDateString('en-GB', { [part]: 'long' });
+    label.textContent = date.toLocaleDateString(milogLocale, { [part]: 'long' });
     meta.append(label);
   }
   heading.append(number, meta);
@@ -356,6 +362,7 @@ function makeAgendaDay(date, scheduled) {
       row.setAttribute('aria-pressed', String(Boolean(selectedAgendaSlot)));
       selectedDate = day.dataset.date;
       updateRail();
+      if (desktopMode() && selectedAgendaSlot) selectInlineAgendaSlot(selectedAgendaSlot);
       if (desktopMode() && compose.open) setComposeAgendaSlot(row.dataset.slot);
     });
     row.addEventListener('dblclick', () => {
@@ -384,7 +391,10 @@ function makeAgendaDay(date, scheduled) {
       slotRow.append(add);
     }
     const label = document.createElement('time');
-    label.textContent = String(hour).padStart(2, '0') + ':00';
+    label.textContent = String(hour).padStart(2, '0') + ':';
+    const minute = document.createElement('small');
+    minute.textContent = '00';
+    label.append(minute);
     const entries = scheduled.filter((item) => new Date(item.created_at).getHours() === hour);
     if (!sortToggle.checked) entries.reverse();
     if (!entries.length) label.className = 'empty-hour';
@@ -395,7 +405,7 @@ function makeAgendaDay(date, scheduled) {
       button.className = 'agenda-record';
       button.dataset.logId = log.id;
       const time = document.createElement('time');
-      time.textContent = new Date(log.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      time.textContent = new Date(log.created_at).toLocaleTimeString(milogLocale, { hour: '2-digit', minute: '2-digit' });
       const body = document.createElement('span');
       body.textContent = desktopMode() && localStorage.getItem(entryFlag(log, 'hidden')) ? 'Hidden entry' : [log.emoji, log.body].filter(Boolean).join(' ');
       button.append(time, body);
@@ -442,7 +452,7 @@ function updateRail() {
     const date = shiftDate(selectedDate, offset);
     const button = document.createElement('button');
     button.textContent = date.getDate();
-    button.setAttribute('aria-label', date.toLocaleDateString('en-GB', { dateStyle: 'long' }));
+    button.setAttribute('aria-label', date.toLocaleDateString(milogLocale, { dateStyle: 'long' }));
     button.setAttribute('aria-pressed', String(offset === 0));
     button.addEventListener('click', (event) => {
       if (event.detail === 0) jumpToAgendaDay(date);
@@ -469,7 +479,7 @@ function previewRailDate(event) {
   const number = document.createElement('b');
   number.textContent = pointerDay.getDate();
   const meta = document.createElement('span');
-  meta.textContent = pointerDay.toLocaleDateString('en-GB', { month: 'short', weekday: 'short' });
+  meta.textContent = pointerDay.toLocaleDateString(milogLocale, { month: 'short', weekday: 'short' });
   if (dateKey(pointerDay) === dateKey(new Date())) meta.textContent += ' · Today';
   pill.replaceChildren(number, meta);
 }
@@ -536,7 +546,7 @@ function renderLogs(logs) {
   const days = new Map();
   for (const log of logs) {
     const date = new Date(log.created_at);
-    const key = date.toLocaleDateString('en-GB');
+    const key = date.toLocaleDateString(milogLocale);
     if (!days.has(key)) {
       const day = document.createElement('article');
       day.className = 'day';
@@ -551,13 +561,16 @@ function renderLogs(logs) {
     const header = document.createElement('header');
     const time = document.createElement('time');
     time.dateTime = log.created_at;
-    time.textContent = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    time.textContent = date.toLocaleTimeString(milogLocale, { hour: '2-digit', minute: '2-digit' });
     header.append(time);
     const more = document.createElement('button');
     more.className = 'entry-more';
     more.setAttribute('aria-label', 'Open entry details');
     more.textContent = '•••';
-    more.addEventListener('click', () => openLogDetail(log));
+    more.addEventListener('click', () => {
+      if (desktopMode()) openDesktopEntryMenu(log, more);
+      else openLogDetail(log);
+    });
     header.append(more);
     const record = document.createElement('button');
     record.className = 'record';
@@ -570,7 +583,7 @@ function renderLogs(logs) {
     entry.append(header, record);
     days.get(key).append(entry);
   }
-  if (desktopMode() && !days.has(shiftDate(selectedDate, 0).toLocaleDateString('en-GB'))) {
+  if (desktopMode() && !days.has(shiftDate(selectedDate, 0).toLocaleDateString(milogLocale))) {
     const day = document.createElement('article');
     day.className = 'day desk-empty-day';
     day.dataset.logDate = selectedDate;
@@ -579,7 +592,7 @@ function renderLogs(logs) {
     timeline.insertBefore(day, following ?? null);
     timeline.scrollTop = day.offsetTop;
   } else if (desktopMode()) {
-    const day = days.get(shiftDate(selectedDate, 0).toLocaleDateString('en-GB'));
+    const day = days.get(shiftDate(selectedDate, 0).toLocaleDateString(milogLocale));
     if (day) timeline.scrollTop = day.offsetTop;
   }
   markDesktopLog();
@@ -637,7 +650,7 @@ document.querySelector('#today').addEventListener('click', () => {
 function renderCalendar() {
   const year = calendarMonth.getFullYear();
   const month = calendarMonth.getMonth();
-  document.querySelector('#calendar-month').textContent = calendarMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  document.querySelector('#calendar-month').textContent = calendarMonth.toLocaleDateString(milogLocale, { month: 'long', year: 'numeric' });
   calendarGrid.replaceChildren();
   const counts = new Map();
   for (const log of accountLogs ?? []) {
@@ -657,7 +670,7 @@ function renderCalendar() {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = date.getDate();
-    button.setAttribute('aria-label', date.toLocaleDateString('en-GB', { dateStyle: 'full' }));
+    button.setAttribute('aria-label', date.toLocaleDateString(milogLocale, { dateStyle: 'full' }));
     button.setAttribute('aria-pressed', String(key === calendarDay));
     button.classList.toggle('other-month', date.getMonth() !== month);
     button.classList.toggle('calendar-today', key === today);
@@ -693,7 +706,7 @@ function renderCalendarRecords() {
     const button = document.createElement('button');
     button.type = 'button';
     const time = document.createElement('time');
-    time.textContent = new Date(log.created_at).toLocaleString('en-GB', query
+    time.textContent = new Date(log.created_at).toLocaleString(milogLocale, query
       ? { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }
       : { hour: '2-digit', minute: '2-digit' });
     const body = document.createElement('span');
@@ -833,6 +846,8 @@ client.auth.onAuthStateChange((event, session) => {
 document.querySelector('#auth-fields').disabled = false;
 modeButton.disabled = false;
 message.textContent = '';
+
+
 
 
 

@@ -15,7 +15,16 @@
   <button type="button" id="desk-date" data-click="today" aria-label="Todaye dön"></button>
   <div class="desk-header-actions"><button type="button" id="desk-prev" aria-label="Previous day">‹</button><button type="button" id="desk-next" aria-label="Next day">›</button></div>
 </section>
-<form class="desk-inline" id="desk-inline" hidden><div class="desk-inline-date"><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div><textarea id="desk-inline-text" aria-label="New journal entry" placeholder="What’s happening?" required></textarea><footer><button type="button" id="desk-inline-reset" hidden>Reset</button><button type="submit">Save</button></footer><p id="desk-inline-status" role="status"></p></form>
+<section class="desk-inline" id="desk-inline" hidden>
+  <form id="desk-inline-form">
+    <div class="desk-inline-date"><strong id="desk-inline-title">New entry</strong><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div>
+    <textarea id="desk-inline-text" aria-label="Entry text" placeholder="What’s happening?"></textarea>
+    <footer><button type="button" id="desk-inline-reset" hidden>Reset</button><button type="submit">Save</button></footer>
+    <p id="desk-inline-status" role="status"></p>
+  </form>
+  <div id="desk-entry-preview" hidden></div>
+</section>
+<dialog id="desk-entry-menu" aria-label="Entry actions"></dialog>
 <aside class="desktop-context" hidden aria-label="Gün görünümü">
   <input id="desk-search" type="search" placeholder="Search entries" aria-label="Search entries">
   <div id="desk-search-results" hidden></div>

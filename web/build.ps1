@@ -27,7 +27,7 @@ Add-Content "$landing/css/style.css" '
 }
 New-Item -ItemType Directory -Force $screen, "$app/assets/fonts" | Out-Null
 
-Copy-Item "$root/preview/timeline.css", "$root/preview/timeline.js", "$PSScriptRoot/account.css", "$PSScriptRoot/account.js", "$PSScriptRoot/compose.js", "$PSScriptRoot/quick.js", "$PSScriptRoot/desktop.js", "$PSScriptRoot/entry-tools.js" $screen -Force
+Copy-Item "$root/preview/timeline.css", "$root/preview/timeline.js", "$PSScriptRoot/account.css", "$PSScriptRoot/account.js", "$PSScriptRoot/compose.js", "$PSScriptRoot/quick.js", "$PSScriptRoot/desktop.js", "$PSScriptRoot/entry-tools.js", "$PSScriptRoot/locale.js" $screen -Force
 Copy-Item "$root/node_modules/@supabase/supabase-js/dist/umd/supabase.js" $screen -Force
 $settings = if (Test-Path "$root/.env") { ConvertFrom-StringData (Get-Content "$root/.env" -Raw) } else { @{} }
 $url = ($env:EXPO_PUBLIC_SUPABASE_URL ?? $settings.EXPO_PUBLIC_SUPABASE_URL ?? '').Trim('"', "'")
@@ -56,6 +56,7 @@ $accountScripts = @'
 <script src="screen/supabase.js" defer></script>
 <script src="screen/config.js" defer></script>
 <script src="screen/sky.js" defer></script>
+<script src="screen/locale.js" defer></script>
 <script src="screen/account.js" defer></script>
 <script src="screen/compose.js" defer></script>
 <script src="screen/quick.js" defer></script>
@@ -103,6 +104,7 @@ if ($Release) {
   Compress-Archive -Path "$app/*" -DestinationPath $archive
   Write-Output "Created $archive"
 }
+
 
 
 

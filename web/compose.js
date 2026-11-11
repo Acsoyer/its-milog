@@ -9,7 +9,7 @@ const agendaDateButton = document.querySelector('#agenda-compose-date');
 const agendaControls = document.querySelector('#compose-agenda');
 const quarters = document.querySelector('#quarter-times');
 const composeSave = composeForm.querySelector('[type=submit]');
-const timeFormat = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+const timeFormat = new Intl.DateTimeFormat(milogLocale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 const twoDigits = (value) => String(value).padStart(2, '0');
 let start;
 let end;
@@ -55,10 +55,10 @@ function setComposeAgendaSlot(slot) {
 
 function updateComposeFields() {
   updateComposeDirty();
-  dateButton.textContent = start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  dateButton.textContent = start.toLocaleDateString(milogLocale, { day: 'numeric', month: 'short', year: 'numeric' });
   const time = timeFormat.format(start) + (end ? ' – ' + formatEnd(start, end) : '');
   timeButton.textContent = time;
-  agendaDateButton.querySelector('strong').textContent = start.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', weekday: 'long' });
+  agendaDateButton.querySelector('strong').textContent = start.toLocaleDateString(milogLocale, { day: 'numeric', month: 'long', weekday: 'long' });
   document.querySelector('#agenda-end').textContent = end ? 'Ends at ' + formatEnd(start, end) : 'Add end time';
   document.querySelector('#agenda-manual').textContent = 'Set time manually · ' + timeFormat.format(start);
   if (agenda) drawQuarters();
@@ -132,7 +132,7 @@ function renderDatePicker() {
   const header = document.createElement('header');
   header.className = 'screen-header';
   const heading = document.createElement('strong');
-  heading.textContent = month.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  heading.textContent = month.toLocaleDateString(milogLocale, { month: 'long', year: 'numeric' });
   const moveMonth = (direction) => {
     month = new Date(year, monthIndex + direction, 1);
     renderDatePicker();
@@ -148,7 +148,7 @@ function renderDatePicker() {
       draftStart.setFullYear(day.getFullYear(), day.getMonth(), day.getDate());
       grid.querySelector('[aria-pressed=true]')?.setAttribute('aria-pressed', 'false');
       button.setAttribute('aria-pressed', 'true');
-    }, day.toLocaleDateString('en-GB', { dateStyle: 'full' }));
+    }, day.toLocaleDateString(milogLocale, { dateStyle: 'full' }));
     button.setAttribute('aria-pressed', String(dateKey(day) === dateKey(draftStart)));
     button.classList.toggle('other-month', day.getMonth() !== monthIndex);
     grid.append(button);
@@ -215,6 +215,38 @@ function renderPicker() {
     renderDatePicker();
     return;
   }
+  if (pickerMode === 'quarters') {
+    const frame = document.createElement('div');
+    frame.className = 'quarter-frame inline-quarter-frame';
+    const strip = document.createElement('div');
+    strip.className = 'inline-quarter-strip';
+    const step = (direction) => strip.scrollBy({ left: direction * 112, behavior: 'smooth' });
+    frame.append(makePickerButton('‹', () => step(-1), 'Earlier times'), strip, makePickerButton('›', () => step(1), 'Later times'));
+    let nearest;
+    const selected = draftStart.getHours() * 60 + draftStart.getMinutes();
+    for (let minutes = 0; minutes < 1440; minutes += 15) {
+      const button = makePickerButton(twoDigits(Math.floor(minutes / 60)) + ':' + twoDigits(minutes % 60), () => {
+        draftStart.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
+        if (draftEnd && draftEnd <= draftStart) draftEnd = null;
+        strip.querySelector('[aria-pressed=true]')?.setAttribute('aria-pressed', 'false');
+        button.setAttribute('aria-pressed', 'true');
+      });
+      button.setAttribute('aria-pressed', String(minutes === selected));
+      if (minutes === Math.floor(selected / 15) * 15) nearest = button;
+      strip.append(button);
+    }
+    const links = document.createElement('div');
+    links.className = 'inline-quarter-links';
+    links.append(makePickerButton('Set time manually', () => { pickerMode = 'time'; renderPicker(); }),
+      makePickerButton('Add end time', () => {
+        draftEnd ??= new Date(+draftStart + 3600000);
+        pickerMode = 'end';
+        renderPicker();
+      }));
+    pickerContent.replaceChildren(frame, links);
+    if (nearest) strip.scrollLeft = nearest.offsetLeft - (strip.clientWidth - nearest.offsetWidth) / 2;
+    return;
+  }
   const range = pickerMode === 'end';
   const time = range ? draftEnd : draftStart;
   const hours = timeWheel(24, time.getHours(), range ? 'End time' : 'Start time');
@@ -234,11 +266,15 @@ function renderPicker() {
     const presets = document.createElement('section');
     const label = document.createElement('small');
     label.textContent = 'START TIME';
-    presets.append(label, makePickerButton(timeFormat.format(draftStart) + ' ✎', () => {
+    const startButton = makePickerButton(timeFormat.format(draftStart) + ' ✎', () => {
       draftEnd = readWheels();
       pickerMode = 'time';
       renderPicker();
-    }, 'Edit start time'));
+    }, 'Edit start time');
+    startButton.className = 'range-start-button';
+    const durationLabel = document.createElement('small');
+    durationLabel.textContent = 'How long?';
+    presets.append(label, startButton, durationLabel);
     for (const [length, caption] of [[15, '15 dk'], [30, '30 dk'], [60, '1 saat'], [120, '2 saat']]) {
       presets.append(makePickerButton(caption, () => {
         draftEnd = new Date(+draftStart + length * 60000);
@@ -292,7 +328,7 @@ document.querySelector('#picker-confirm').addEventListener('click', () => {
     return;
   }
   if (pickerCommit) {
-    pickerCommit(draftStart);
+    pickerCommit(draftStart, draftEnd);
     picker.close();
     return;
   }
@@ -325,5 +361,6 @@ function composeTiming() {
   if (!start || !Number.isFinite(+start) || (end && end <= start)) return null;
   return { created_at: start.toISOString(), ...(end ? { end_at: end.toISOString() } : {}) };
 }
+
 
 

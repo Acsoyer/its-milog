@@ -604,3 +604,46 @@
   :root.milog-signed-in:not(.force-mobile) #settings-mobile-view { display: block; margin: 16px; padding: 9px 12px; background: #eaf0f6; color: #173b67; border-radius: 8px; }
   .desktop-heading #desk-date { max-width: clamp(105px, 14vw, 210px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
+#profile-drawer > form { position: absolute; left: auto; right: 14px; top: max(12px, env(safe-area-inset-top)); }
+#profile-drawer > form button, #web-account .screen-header button { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; color: var(--ink); font-size: 27px; }
+#profile-drawer .profile-rows > label:has(#sky-city) { flex-direction: column; align-items: stretch; padding-block: 11px; }
+#profile-drawer .profile-rows #sky-city { width: 100%; max-width: none; margin: 0; padding: 9px 10px; border: 1px solid var(--rule); border-radius: 8px; text-align: left; color: var(--ink); }
+.agenda-hour time small { font-size: .75em; vertical-align: top; line-height: inherit; }
+.entry-more { letter-spacing: -.09em; min-width: 34px; font-size: 16px; }
+#compose-dialog #compose-body:focus { outline: none; box-shadow: none; }
+.compose-range section:first-child .range-start-button { background: #dce7f2; color: #173b67; padding: 8px; }
+.compose-range section:first-child .range-start-button:hover { background: #bfd5ed; }
+.compose-range section:first-child small:nth-child(3) { margin-top: 6px; }
+.inline-quarter-frame { padding: 6px 0; }
+.inline-quarter-strip { position: relative; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; flex: 1; }
+.inline-quarter-strip button, .inline-quarter-links button { flex: none; padding: 8px; border: 1px solid var(--rule); border-radius: 8px; font-size: 12px; }
+.inline-quarter-strip button[aria-pressed=true] { color: white; background: #173b67; }
+.inline-quarter-links { display: flex; justify-content: space-between; gap: 8px; margin: 8px 0 12px; }
+#desk-entry-menu { position: fixed; margin: 0; width: 190px; padding: 5px; border: 1px solid #d8d4cc; border-radius: 10px; box-shadow: 0 8px 22px #0002; }
+#desk-entry-menu::backdrop { background: transparent; }
+#desk-entry-menu button { display: block; width: 100%; text-align: left; padding: 8px; border-radius: 6px; font-size: 13px; }
+#desk-entry-menu button:hover { background: #eaf0f6; }
+#desk-entry-preview article { background: #f2f5f7; padding: 12px; border-radius: 10px; color: #202b36; }
+#desk-entry-preview header { display: flex; align-items: center; justify-content: space-between; }
+#desk-entry-preview header button { font-size: 23px; }
+#desk-entry-preview #detail-body { max-height: 160px; overflow: auto; }
+#desk-inline-form { display: grid; gap: 6px; }
+#desk-inline .desk-inline-date strong { margin-right: auto; align-self: center; font-size: 15px; }
+#desk-inline .entry-tools { margin-right: auto; }
+#desk-inline .entry-tools svg { width: 21px; height: 21px; }
+#desk-inline .entry-tools button { min-width: 34px; min-height: 34px; padding: 5px; }
+#desk-inline .entry-tools button:hover { background: #e5edf6; }
+:root.milog-dark { color-scheme: dark; background: #151a22; --ink: #eef2f7; --muted: #aeb8c6; --rule: #394656; --accent: #a6d0f5; }
+:root.milog-dark .phone { --ink: #eef2f7; --muted: #aeb8c6; --rule: #394656; --accent: #a6d0f5; color: var(--ink); }
+:root.milog-dark .phone :is(.day, .desk-inline, .desktop-sidebar, .desktop-context, .bottom, .month-card, .account-gate, .quarter-frame, .profile-rows, #web-log-detail article, #desk-entry-preview article, .quick-footer, .quick-row),
+:root.milog-dark .phone > dialog,
+:root.milog-dark .entry-tool-picker { background: #242d3a !important; color: #eef2f7 !important; border-color: #394656 !important; }
+:root.milog-dark .phone :is(input, select, textarea, .desktop-heading button, .desktop-context button, #desk-inline button, .compose-actions button, .entry-tools-preview button, .quick-footer button, .quick-grid button, #quick-grid button, .compose-date button, #agenda-compose-date, .compose-range button, #desk-entry-menu button, #detail-time, .date-badge, .time-pill) { background-color: #303d4d; border-color: #435469; color: #eef2f7; }
+:root.milog-dark .phone :is([aria-pressed=true], button[type=submit], #picker-confirm, .desk-create, .compose-range section:first-child .range-start-button) { background-color: #315980; color: #fff; }
+:root.milog-dark .phone button[type=submit]:disabled { background-color: #394656; color: #b6c2cf; }
+:root.milog-dark .phone :is(.desktop-heading #desk-date, .desk-tabs button, .entry-tools button, #compose-body, #desk-inline-text) { background-color: transparent; color: #eef2f7; }
+:root.milog-dark .phone :is(.entry-tools button:hover, #desk-entry-menu button:hover, .range-start-button:hover) { background-color: #466584; }
+:root.milog-dark .phone :is(.compose-wheels::before, .agenda-hour[aria-pressed=true], .entry-highlight, .day-rail) { background-color: #344d67; }
+:root.milog-dark .phone :is(.date-meta, .date-meta span, #desk-date, .desk-days small, .desk-quick h2, #profile-email, .profile-rows b, .compose-wheel div, .compose-range small) { color: #aeb8c6; }
+:root.milog-dark .phone .compose-wheel .selected { color: #fff; }
+:root.milog-dark .phone :is(.desk-brand img, .screen-header > img, .auth-desktop-logo, .auth-mobile-logo) { filter: brightness(0) invert(1); }

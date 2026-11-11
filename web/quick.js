@@ -437,8 +437,15 @@
   const trigger = get('quick-logs');
   async function loadQuickSettings(session) {
     const userId = session.user.id;
-    const { data: row, error } = await client.from('quick_log_settings').select('actions, organization, updated_at').eq('user_id', userId).maybeSingle();
-    if (activeSession !== session) return false;
+    let result;
+    try {
+      result = await client.from('quick_log_settings').select('actions, organization, updated_at').eq('user_id', userId)
+        .abortSignal(AbortSignal.timeout(12000)).maybeSingle();
+    } catch {
+      return false;
+    }
+    const { data: row, error } = result;
+    if (activeSession?.user.id !== userId) return false;
     if (error) return false;
     owner = userId;
     data = { actions: Array.isArray(row?.actions) ? row.actions : [], organization: row?.organization ?? {}, updated_at: row?.updated_at };
@@ -470,7 +477,7 @@
     shortcuts.textContent = 'Loading quick logs…';
     desktopFolder = null;
     const loaded = await loadQuickSettings(session);
-    if (activeSession !== session) return;
+    if (activeSession?.user.id !== session.user.id) return;
     if (loaded) {
       drawDesktopShortcuts();
       if (!shortcuts.childElementCount) shortcuts.textContent = 'Add a quick log to get started.';
@@ -499,7 +506,7 @@
     sheet.showModal();
     trigger.setAttribute('aria-expanded', 'true');
     const loaded = await loadQuickSettings(session);
-    if (activeSession !== session || !sheet.open) return;
+    if (activeSession?.user.id !== session.user.id || !sheet.open) return;
     get('quick-status').textContent = loaded ? '' : 'Could not load quick logs.';
     if (!loaded) return;
     if (desktopMode()) return openManager(false);

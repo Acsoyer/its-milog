@@ -6,15 +6,16 @@
 <title>My Milog</title>
 <link rel="stylesheet" href="screen/timeline.css?v=eab09429730e">
 <script src="screen/timeline.js?v=af426774d2e9" defer></script>
-<link rel="stylesheet" href="screen/account.css?v=d2183bbfe0dd">
+<link rel="stylesheet" href="screen/account.css?v=726ac7b5566b">
 <script src="screen/supabase.js?v=ec004176d101" defer></script>
 <script src="screen/config.js?v=ead7375de480" defer></script>
 <script src="screen/sky.js?v=9553175b580d" defer></script>
-<script src="screen/account.js?v=d8aa30c20268" defer></script>
-<script src="screen/compose.js?v=73e1df8b52a5" defer></script>
-<script src="screen/quick.js?v=1c79e63180de" defer></script>
+<script src="screen/locale.js?v=0ef16ffcde68" defer></script>
+<script src="screen/account.js?v=3cf3f12858d6" defer></script>
+<script src="screen/compose.js?v=fb1d7127a136" defer></script>
+<script src="screen/quick.js?v=b312bb506f55" defer></script>
 <script src="screen/entry-tools.js?v=50f9f474961f" defer></script>
-<script src="screen/desktop.js?v=b974270bf20d" defer></script>
+<script src="screen/desktop.js?v=d4ff1502039c" defer></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap"><link rel="icon" type="image/svg+xml" href="assets/milog-logo.svg"></head>
 <body>
 <main class="phone" aria-label="Milog Timeline">
@@ -35,7 +36,16 @@
   <button type="button" id="desk-date" data-click="today" aria-label="Todaye dön"></button>
   <div class="desk-header-actions"><button type="button" id="desk-prev" aria-label="Previous day">‹</button><button type="button" id="desk-next" aria-label="Next day">›</button></div>
 </section>
-<form class="desk-inline" id="desk-inline" hidden><div class="desk-inline-date"><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div><textarea id="desk-inline-text" aria-label="New journal entry" placeholder="What’s happening?" required></textarea><footer><button type="button" id="desk-inline-reset" hidden>Reset</button><button type="submit">Save</button></footer><p id="desk-inline-status" role="status"></p></form>
+<section class="desk-inline" id="desk-inline" hidden>
+  <form id="desk-inline-form">
+    <div class="desk-inline-date"><strong id="desk-inline-title">New entry</strong><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div>
+    <textarea id="desk-inline-text" aria-label="Entry text" placeholder="What’s happening?"></textarea>
+    <footer><button type="button" id="desk-inline-reset" hidden>Reset</button><button type="submit">Save</button></footer>
+    <p id="desk-inline-status" role="status"></p>
+  </form>
+  <div id="desk-entry-preview" hidden></div>
+</section>
+<dialog id="desk-entry-menu" aria-label="Entry actions"></dialog>
 <aside class="desktop-context" hidden aria-label="Gün görünümü">
   <input id="desk-search" type="search" placeholder="Search entries" aria-label="Search entries">
   <div id="desk-search-results" hidden></div>
@@ -62,11 +72,11 @@
   <button id="log-view" class="current" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M13 3H6v18h15v-9 M3 7h5 M3 12h5 M3 17h5 M12 13l1-4 7-7 3 3-7 7z"/></svg><span>Log</span></button>
 </nav>
 <dialog id="profile-drawer" aria-labelledby="profile-name">
-  <form method="dialog"><button aria-label="Profili kapat">‹ Close</button></form>
+  <form method="dialog"><button aria-label="Close">×</button></form>
   <header class="profile-identity"><div class="drawer-avatar" id="drawer-avatar"></div><div><h2 id="profile-name"></h2><p id="profile-email"></p></div></header>
   <div class="profile-rows">
     <button id="profile-account" type="button"><span aria-hidden="true">⚙</span> My account <b>›</b></button>
-    <label>Language<select aria-label="Language" disabled><option>English</option></select></label>
+    <label>Language<select id="profile-language" aria-label="Language"><option value="en">English</option><option value="tr">Türkçe</option></select></label>
     <label>Location<select id="sky-city" aria-label="Location"></select></label>
     <label>Theme<select id="profile-theme" aria-label="Theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
     <button type="button" disabled><span aria-hidden="true">✧</span> Special days <b>›</b></button>
@@ -74,7 +84,7 @@
   </div>
   <button id="web-signout" type="button">⇥ &nbsp; Sign out</button>
 </dialog>
-<dialog id="web-account" class="full-screen"><form method="dialog" class="screen-header"><h2>Hesap ayarları</h2><button aria-label="Close">×</button></form><div class="web-account-content"><strong id="web-account-name"></strong><p id="web-account-email"></p></div></dialog>
+<dialog id="web-account" class="full-screen"><form method="dialog" class="screen-header"><button type="button" id="web-account-back" aria-label="Back">‹</button><h2>My account</h2><button aria-label="Close">×</button></form><div class="web-account-content"><strong id="web-account-name"></strong><p id="web-account-email"></p></div></dialog>
 <dialog id="timeline-menu" aria-label="Timeline menüsü">
   <button type="button" id="timeline-settings-open"></button><button type="button" id="timeline-activity-open">Recent activity</button>
   <label class="desktop-layout-toggle"><input id="mobile-layout" type="checkbox"> Mobile view</label>
@@ -109,7 +119,7 @@
 <dialog id="compose-dialog" class="full-screen">
   <form id="compose-form">
     <header class="screen-header"><h2 id="compose-title">New log</h2><img src="assets/milog-logo.svg" alt="Milog"><button type="button" id="compose-close" aria-label="Close">×</button></header>
-    <div class="compose-date" id="compose-date-row"><strong>Log Tarihi</strong><button type="button" id="compose-date" aria-haspopup="dialog"></button><button type="button" id="compose-time" aria-haspopup="dialog"></button></div>
+    <div class="compose-date" id="compose-date-row"><strong>Entry date</strong><button type="button" id="compose-date" aria-haspopup="dialog"></button><button type="button" id="compose-time" aria-haspopup="dialog"></button></div>
     <section id="compose-agenda" hidden>
       <button type="button" id="agenda-compose-date" aria-haspopup="dialog"><small>DATE</small><strong></strong></button>
       <small>TIME</small>

@@ -27,7 +27,7 @@ function renderDesktopCalendarSelection() {
   document.querySelector('#desk-calendar-selection').hidden = !desktopCalendarDay;
   if (!desktopCalendarDay) return;
   const date = shiftDate(desktopCalendarDay, 0);
-  document.querySelector('#desk-calendar-day').textContent = date.toLocaleDateString('en-GB', { dateStyle: 'full' });
+  document.querySelector('#desk-calendar-day').textContent = date.toLocaleDateString(milogLocale, { dateStyle: 'full' });
   const list = document.querySelector('#desk-calendar-entries');
   list.replaceChildren();
   for (const log of (accountLogs ?? []).filter((entry) => dateKey(new Date(entry.created_at)) === desktopCalendarDay)) {
@@ -70,7 +70,7 @@ function renderDesktopSearch() {
   for (const log of (accountLogs ?? []).filter((item) => item.body.toLocaleLowerCase('en').includes(query)).slice(0, 30)) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = new Date(log.created_at).toLocaleDateString('en-GB') + ' · ' + log.body;
+    button.textContent = new Date(log.created_at).toLocaleDateString(milogLocale) + ' · ' + log.body;
     button.addEventListener('click', () => revealDesktopLog(log));
     results.append(button);
   }
@@ -78,8 +78,8 @@ function renderDesktopSearch() {
 }
 document.querySelector('#desk-search').addEventListener('input', renderDesktopSearch);
 function updateDesktopClock() {
-  const date = shiftDate(selectedDate, 0).toLocaleDateString('en-GB', { dateStyle: 'full' });
-  document.querySelector('#desk-date').textContent = date + ' · ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const date = shiftDate(selectedDate, 0).toLocaleDateString(milogLocale, { dateStyle: 'full' });
+  document.querySelector('#desk-date').textContent = date + ' · ' + new Date().toLocaleTimeString(milogLocale, { hour: '2-digit', minute: '2-digit' });
   refreshInlineDates();
 }
 setInterval(updateDesktopClock, 1000);
@@ -87,6 +87,7 @@ setInterval(updateDesktopClock, 1000);
 desktopQuery.addEventListener('change', closeWorkPanels);
 mobileLayout.addEventListener('change', closeWorkPanels);
 function closeWorkPanels() {
+  closeEntryDetail();
   for (const dialog of [calendar, detail, compose, quickManager, webAccount, drawer, timelineSettings]) dialog.close();
 }
 
@@ -123,14 +124,16 @@ document.querySelector('#desk-next').addEventListener('click', () => focusDeskto
 function updateDesktop() {
   const date = desktopMonth ?? shiftDate(selectedDate, 0);
   updateDesktopClock();
-  document.querySelector('#desk-inline').hidden = agenda || !activeSession;
+  document.querySelector('#desk-inline').hidden = !activeSession;
+  document.querySelector('#desk-inline-title').textContent = agenda ? 'Plan an entry' : 'New entry';
+  document.querySelector('#desk-inline-text').placeholder = agenda ? 'What are you planning?' : 'What’s happening?';
   for (const button of document.querySelectorAll('.desktop-sidebar nav [data-click], .desk-tabs [data-click]')) {
     const active = button.dataset.click === (agenda ? 'agenda-view' : 'log-view');
     button.setAttribute('aria-pressed', String(active));
   }
   const month = document.querySelector('#desk-month');
   const caption = document.createElement('p');
-  caption.textContent = date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  caption.textContent = date.toLocaleDateString(milogLocale, { month: 'long', year: 'numeric' });
   const days = document.createElement('div');
   days.className = 'desk-days';
   for (const day of ['M', 'T', 'W', 'T', 'F', 'S', 'S']) {
@@ -146,7 +149,7 @@ function updateDesktop() {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = day.getDate();
-    button.setAttribute('aria-label', day.toLocaleDateString('en-GB', { dateStyle: 'full' }));
+    button.setAttribute('aria-label', day.toLocaleDateString(milogLocale, { dateStyle: 'full' }));
     button.setAttribute('aria-pressed', String(dateKey(day) === (desktopCalendarDay ?? selectedDate)));
     button.classList.toggle('other-month', day.getMonth() !== index);
     button.classList.toggle('has-records', (accountLogs ?? []).some((log) => dateKey(new Date(log.created_at)) === dateKey(day)));
@@ -168,13 +171,67 @@ for (const [id, direction] of [['desk-month-prev', -1], ['desk-month-next', 1]])
     updateDesktop();
   });
 }
-const inline = document.querySelector('#desk-inline');
+const inline = document.querySelector('#desk-inline-form');
 const inlineText = document.querySelector('#desk-inline-text');
+const inlinePreview = document.querySelector('#desk-entry-preview');
+const detailCard = detail.querySelector('article');
+const entryMenu = document.querySelector('#desk-entry-menu');
+function showDesktopEntryPreview() {
+  inline.hidden = true;
+  inlinePreview.hidden = false;
+  inlinePreview.append(detailCard);
+}
+function isEntryDetailVisible() {
+  return detail.open || !inlinePreview.hidden;
+}
+function closeEntryDetail() {
+  entryMenu.close();
+  detail.close();
+  detail.append(detailCard);
+  inlinePreview.hidden = true;
+  inline.hidden = false;
+}
+detailCard.querySelector('form').addEventListener('submit', (event) => {
+  if (inlinePreview.hidden) return;
+  event.preventDefault();
+  closeEntryDetail();
+});
+function openDesktopEntryMenu(log, anchor) {
+  currentDetail = log;
+  refreshDetailActions();
+  entryMenu.replaceChildren();
+  for (const action of detailCard.querySelectorAll('footer button')) {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.textContent = action.textContent;
+    option.addEventListener('click', () => {
+      entryMenu.close();
+      openLogDetail(log);
+      action.click();
+    });
+    entryMenu.append(option);
+  }
+  const box = anchor.getBoundingClientRect();
+  entryMenu.style.left = Math.max(8, box.right - 190) + 'px';
+  entryMenu.style.top = Math.min(box.bottom + 4, innerHeight - 220) + 'px';
+  entryMenu.showModal();
+}
+entryMenu.addEventListener('click', (event) => {
+  if (event.target === entryMenu) entryMenu.close();
+});
 setupEntryTools(composeForm, composeBody, updateComposeDirty);
 setupEntryTools(inline, inlineText, refreshInlineDirty);
+inline.querySelector('footer').prepend(inline.querySelector('.entry-tools'));
 inlineText.required = false;
 composeBody.required = false;
 let inlineDate;
+let inlineEnd;
+function selectInlineAgendaSlot(slot) {
+  inlineDate = new Date(slot);
+  if (inlineEnd && inlineEnd <= inlineDate) inlineEnd = null;
+  refreshInlineDates();
+  refreshInlineDirty();
+}
 const inlineReset = document.querySelector('#desk-inline-reset');
 function refreshInlineDirty() {
   const attached = hasEntryAttachments(inline);
@@ -185,6 +242,7 @@ inlineText.addEventListener('input', refreshInlineDirty);
 inlineReset.addEventListener('click', () => {
   inline.reset();
   inlineDate = undefined;
+  inlineEnd = null;
   clearEntryTools(inline);
   refreshInlineDates();
   refreshInlineDirty();
@@ -198,17 +256,18 @@ function inlineDefaultDate() {
 }
 function refreshInlineDates() {
   const date = inlineDate ?? inlineDefaultDate();
-  document.querySelector('#desk-inline-day').textContent = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-  document.querySelector('#desk-inline-time').textContent = timeFormat.format(date);
+  document.querySelector('#desk-inline-day').textContent = date.toLocaleDateString(milogLocale, { day: 'numeric', month: 'short' });
+  document.querySelector('#desk-inline-time').textContent = timeFormat.format(date) + (inlineEnd ? ' – ' + formatEnd(date, inlineEnd) : '');
 }
 for (const [id, mode] of [['desk-inline-day', 'date'], ['desk-inline-time', 'time']]) {
   document.querySelector('#' + id).addEventListener('click', (event) => {
     const previousStart = start;
     const previousEnd = end;
     start = inlineDate ?? inlineDefaultDate();
-    end = null;
-    showComposePicker(mode, event.currentTarget, (date) => {
+    end = inlineEnd;
+    showComposePicker(mode === 'time' && agenda ? 'quarters' : mode, event.currentTarget, (date, finish) => {
       inlineDate = date;
+      inlineEnd = finish;
       refreshInlineDates();
       refreshInlineDirty();
     });
@@ -228,7 +287,8 @@ inline.addEventListener('submit', async (event) => {
   let error;
   try {
     const { payload, cleanup } = await entryPayload(inline, session.user.id, id, body);
-    ({ error } = await client.from('logs').insert({ id, user_id: session.user.id, ...payload, kind: 'text', visibility: 'private', created_at: date.toISOString() }));
+    const timing = { created_at: date.toISOString(), ...(inlineEnd ? { end_at: inlineEnd.toISOString() } : {}) };
+    ({ error } = await client.from('logs').insert({ id, user_id: session.user.id, ...payload, kind: 'text', visibility: 'private', ...timing }));
     if (error) await cleanup();
   } catch (failure) { error = failure; }
   button.disabled = false;
@@ -238,9 +298,11 @@ inline.addEventListener('submit', async (event) => {
     inline.reset();
     clearEntryTools(inline);
     inlineDate = undefined;
+    inlineEnd = null;
     refreshInlineDirty();
     selectedDate = dateKey(date);
     closeWorkPanels();
     await showTimeline(session);
   }
 });
+
