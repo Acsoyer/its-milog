@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Milog · Timeline Önizleme</title>
+<link rel="stylesheet" href="timeline.css">
+<script src="timeline.js" defer></script>
+</head>
+<body>
+<main class="phone" aria-label="Milog Timeline">
+  <header class="toolbar">
+    <span class="avatar" aria-label="Örnek profil">M</span>
+    <img src="../assets/milog-logo.svg" alt="Milog" width="54">
+    <button id="search-toggle" aria-label="Kayıt ara" aria-expanded="false" aria-controls="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></button>
+  </header>
+  <input id="search" type="search" aria-label="Örnek kayıtlarda ara" placeholder="Kayıt ara" hidden>
+  <section class="timeline" aria-label="Örnek kayıtlar">
+    <article class="day">
+      <h1 class="date"><span class="day-number">8</span><span class="date-meta"><span>Kasım</span><span>Pazar</span></span></h1>
+      <section class="entry"><header><time datetime="08:30">08:30</time></header><button class="record"><span>Sabah yürüyüşü</span><span class="excerpt">Parkta kısa bir tur attım. Hava serin ve sakindi.</span></button></section>
+      <section class="entry"><header><time datetime="11:45">11:45</time></header><button class="record"><span>Kitapçıya uğradım ve uzun zamandır aradığım kitabı sonunda buldum</span><span class="excerpt">Bir sonraki hafta okumak için kenara ayırdım.</span></button></section>
+      <section class="entry"><header><time datetime="15:10">15:10</time></header><button class="record"><span>Kahve</span></button></section>
+      <p id="empty" hidden>Kayıt bulunamadı.</p>
+    </article>
+  </section>
+  <nav class="bottom" aria-label="Timeline önizleme kontrolleri">
+    <button id="today">⌂<span>Bugün</span></button>
+    <button id="quick" aria-label="Hızlı kayıt panelini aç" class="quick">ϟ</button>
+    <span class="current">▤<span>Kayıt</span></span>
+  </nav>
+  <dialog id="panel" aria-labelledby="panel-title">
+    <form method="dialog"><button autofocus>‹ Geri</button></form>
+    <h2 id="panel-title"></h2>
+    <p id="panel-copy"></p>
+  </dialog>
+</main>
+</body>
+</html>

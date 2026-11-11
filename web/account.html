@@ -1,0 +1,19 @@
+<section id="account-gate" class="account-gate" aria-labelledby="auth-title">
+  <div class="auth-content">
+  <img class="auth-mobile-logo" src="../assets/milog-logo.svg" width="96" alt="Milog">
+  <h1 id="auth-title">Sign in</h1>
+  <p>Sign in to see your journal and agenda.</p>
+  <form id="auth-form" method="post">
+    <fieldset id="auth-fields" disabled>
+      <label id="name-field" hidden>Display name<input id="displayName" autocomplete="nickname" maxlength="80"></label>
+      <label>Email<input id="email" type="email" autocomplete="email" required></label>
+      <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+      <button type="submit" id="auth-submit">Sign in</button>
+    </fieldset>
+  </form>
+  <p id="auth-status" role="status" aria-live="polite">Loading sign-in. Refresh the page if the form stays disabled.</p>
+  <button id="auth-switch" type="button" disabled>New to Milog? Create account</button>
+  <button class="google-signup" type="button" disabled><span aria-hidden="true">G</span> Continue with Google</button>
+  </div>
+  <img class="auth-desktop-logo" src="../assets/milog-logo.svg" alt="Milog">
+</section>

@@ -1,0 +1,6 @@
+{
+  "name": "its-milog",
+  "private": true,
+  "scripts": { "build": "pwsh -NoProfile -File web/build.ps1 -AppOnly" },
+  "dependencies": { "@supabase/supabase-js": "2.112.3", "typescript": "5.9.3" }
+}

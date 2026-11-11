@@ -1,0 +1,106 @@
+@font-face {
+  font-family: "Neue Haas Unica";
+  src: url("../assets/fonts/NeueHaasUnicaPro-Bold.ttf") format("truetype");
+  font-weight: 800;
+}
+:root {
+  --phone-width: 393px;
+  --page-inset: 14px;
+  --paper-inset: 16px;
+  --date-size: 50px;
+  --month-size: 14px;
+  --weekday-size: 13px;
+  --record-size: 14px;
+  --record-line-height: 19px;
+  --ruled-line: 28px;
+  --ink: #171716;
+  --muted: #74706a;
+  --rule: #e7e1d7;
+  --accent: #173b67;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  color: var(--ink);
+  background: #eeece8;
+  -webkit-text-size-adjust: 100%;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input { font: inherit; color: inherit; }
+button { background: none; border: 0; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.phone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--phone-width);
+  height: 100vh;
+  height: 100dvh;
+  margin-inline: auto;
+  background: #d1dae0;
+}
+.toolbar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  min-height: 78px;
+  padding: calc(env(safe-area-inset-top) + 6px) var(--page-inset) 8px;
+  background: linear-gradient(#edf3f8, #d1dae0);
+}
+.toolbar img { justify-self: center; }
+.toolbar button { height: 44px; }
+.toolbar svg { width: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  font-weight: 800;
+}
+#search { margin: 0 var(--page-inset) 8px; padding: 10px; border: 1px solid var(--rule); border-radius: 12px; }
+.timeline { flex: 1; overflow: auto; padding: 11px var(--page-inset) 24px; }
+.day {
+  min-height: 100%;
+  padding: 11px var(--paper-inset) 40px;
+  border-radius: 27px;
+  background: #fffdf8;
+  box-shadow: 0 3px 9px #0002;
+}
+.date {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+}
+.day-number { font: 800 var(--date-size)/1 "Neue Haas Unica", system-ui, sans-serif; }
+.date-meta { display: grid; gap: 4px; color: var(--muted); font-size: var(--month-size); font-weight: 800; }
+.date-meta span + span { font-size: var(--weekday-size); font-weight: 600; }
+.entry { border-top: 1.5px solid var(--rule); margin-top: 12px; }
+.entry header { display: flex; align-items: center; height: var(--ruled-line); }
+.entry time { padding: 3px 9px; border-radius: 999px; background: #f1e4ca; color: #97681f; font-size: 11px; font-weight: 800; }
+.record {
+  display: block;
+  width: 100%;
+  padding: 0 0 0 16px;
+  text-align: left;
+  font-size: var(--record-size);
+  line-height: var(--record-line-height);
+  background: repeating-linear-gradient(transparent 0 calc(var(--ruled-line) - 1px), var(--rule) calc(var(--ruled-line) - 1px) var(--ruled-line));
+}
+.record span { display: block; padding: 4px 0 5px; }
+.excerpt { color: var(--muted); }
+.bottom { display: flex; justify-content: space-around; align-items: center; background: white; padding: 0 8px env(safe-area-inset-bottom); border-top: 1px solid var(--rule); }
+.bottom > * { display: grid; place-content: center; text-align: center; min-width: 18%; height: 45px; font-size: 21px; }
+.bottom span span, .bottom button span { font-size: 9px; font-weight: 600; }
+.bottom .quick { width: 28%; height: 62px; border-radius: 31px; background: #6b9cc8; color: white; font-size: 26px; }
+.current { background: #dce7f2; color: var(--accent); border-radius: 14px; }
+#panel { width: calc(100% - 28px); max-width: calc(var(--phone-width) - 28px); border: 1px solid var(--rule); border-radius: 24px; padding: 20px; }
+#panel::backdrop { background: #0005; }
+#panel button { color: var(--accent); padding: 8px 0; }
+@media (hover: none) and (pointer: coarse) {
+  .phone { max-width: 100%; }
+}

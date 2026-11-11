@@ -1,0 +1,108 @@
+<button class="floating-create" id="create-log" aria-label="New entry"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4v24M4 16h24"/></svg></button>
+<nav class="bottom" hidden aria-label="Timeline kontrolleri">
+  <button id="today"><svg viewBox="0 0 24 24"><path d="m3 10 9-8 9 8v11H3z M9 21v-8h6v8"/></svg><span>Today</span></button>
+  <button id="calendar-view"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3"/><path d="M5 8h14"/><text id="calendar-number" x="12" y="18" text-anchor="middle"></text></svg><span>Calendar</span></button>
+  <button id="quick" aria-label="Quick logs panelini aç" class="quick"><svg viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-12h-7z"/></svg></button>
+  <button id="agenda-view" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="16" height="20" rx="2"/><path d="M15 2v20 M2 7h6 M2 12h6 M2 17h6 M15 9h6 M15 15h6"/></svg><span>Agenda</span></button>
+  <button id="log-view" class="current" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M13 3H6v18h15v-9 M3 7h5 M3 12h5 M3 17h5 M12 13l1-4 7-7 3 3-7 7z"/></svg><span>Log</span></button>
+</nav>
+<dialog id="profile-drawer" aria-labelledby="profile-name">
+  <form method="dialog"><button aria-label="Profili kapat">‹ Close</button></form>
+  <header class="profile-identity"><div class="drawer-avatar" id="drawer-avatar"></div><div><h2 id="profile-name"></h2><p id="profile-email"></p></div></header>
+  <div class="profile-rows">
+    <button id="profile-account" type="button"><span aria-hidden="true">⚙</span> My account <b>›</b></button>
+    <label>Language<select aria-label="Language" disabled><option>English</option></select></label>
+    <label>Location<select id="sky-city" aria-label="Location"></select></label>
+    <label>Theme<select id="profile-theme" aria-label="Theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+    <button type="button" disabled><span aria-hidden="true">✧</span> Special days <b>›</b></button>
+    <button type="button" disabled><span aria-hidden="true">✧</span> Highlights <b>›</b></button>
+  </div>
+  <button id="web-signout" type="button">⇥ &nbsp; Sign out</button>
+</dialog>
+<dialog id="web-account" class="full-screen"><form method="dialog" class="screen-header"><h2>Hesap ayarları</h2><button aria-label="Close">×</button></form><div class="web-account-content"><strong id="web-account-name"></strong><p id="web-account-email"></p></div></dialog>
+<dialog id="timeline-menu" aria-label="Timeline menüsü">
+  <button type="button" id="timeline-settings-open"></button><button type="button" id="timeline-activity-open">Recent activity</button>
+  <label class="desktop-layout-toggle"><input id="mobile-layout" type="checkbox"> Mobile view</label>
+</dialog>
+<dialog id="timeline-settings" class="bottom-sheet">
+  <form method="dialog" class="screen-header"><h2 id="timeline-settings-title"></h2><button aria-label="Close">×</button></form>
+  <label id="timeline-sort-row"><input id="timeline-sort" type="checkbox"> Geç saatler üstte</label>
+</dialog>
+<dialog id="timeline-activity" class="bottom-sheet"><form method="dialog" class="screen-header"><h2>Recent activity</h2><button aria-label="Close">×</button></form><div id="web-activity-list"></div></dialog>
+<dialog id="web-log-detail" class="full-screen" aria-label="Kayıt detayı">
+  <article>
+    <header><time id="detail-time"></time><form method="dialog"><button aria-label="Close">×</button></form></header>
+    <p id="detail-date"></p><p id="detail-body"></p>
+    <footer><button type="button" id="detail-edit">Edit</button><button type="button" id="detail-delete">Delete</button></footer>
+    <p id="detail-status" role="status"></p>
+  </article>
+</dialog>
+<dialog id="calendar-dialog" class="full-screen">
+  <form method="dialog">
+    <header class="screen-header"><button value="cancel" aria-label="Back">‹</button><h2>Calendar</h2><button value="cancel" aria-label="Close">×</button></header>
+    <input id="calendar-search" type="search" placeholder="Search entries" aria-label="Search entries">
+    <section class="month-card">
+      <header class="screen-header"><button type="button" id="month-back" aria-label="Previous month">‹</button><strong id="calendar-month"></strong><button type="button" id="month-next" aria-label="Next month">›</button></header>
+      <div id="calendar-grid"></div>
+    </section>
+    <section id="calendar-records" aria-live="polite"></section>
+    <button value="open">Agendayı aç</button>
+  </form>
+</dialog>
+<dialog id="compose-dialog" class="full-screen">
+  <form id="compose-form">
+    <header class="screen-header"><h2 id="compose-title">New log</h2><img src="assets/milog-logo.svg" alt="Milog"><button type="button" id="compose-close" aria-label="Close">×</button></header>
+    <div class="compose-date" id="compose-date-row"><strong>Log Tarihi</strong><button type="button" id="compose-date" aria-haspopup="dialog"></button><button type="button" id="compose-time" aria-haspopup="dialog"></button></div>
+    <section id="compose-agenda" hidden>
+      <button type="button" id="agenda-compose-date" aria-haspopup="dialog"><small>DATE</small><strong></strong></button>
+      <small>TIME</small>
+      <div class="quarter-frame">
+        <button type="button" id="quarter-back" aria-label="Önceki saatler">‹</button>
+        <div id="quarter-times" aria-label="Start time"></div>
+        <button type="button" id="quarter-next" aria-label="Sonraki saatler">›</button>
+      </div>
+      <div class="compose-time-links"><button type="button" id="agenda-manual">Set time manually</button><button type="button" id="agenda-end">Add end time</button></div>
+    </section>
+    <div class="compose-writing"><textarea id="compose-body" aria-label="Entry text" placeholder="What’s happening?" required rows="5"></textarea><button type="button" id="compose-clear" aria-label="Metni temizle">×</button></div>
+    <p id="compose-status" role="status"></p>
+    <footer class="compose-actions"><button type="button" id="compose-cancel">Cancel</button><button type="submit" disabled>Save</button></footer>
+  </form>
+</dialog>
+<dialog id="compose-picker" aria-label="Tarih ve saat seçimi">
+  <div id="compose-picker-content"></div>
+  <p id="picker-status" role="status"></p>
+  <footer><button type="button" id="picker-end-link">+ End time</button><button type="button" id="picker-confirm">Done</button></footer>
+</dialog>
+<dialog id="quick-sheet" class="bottom-sheet" aria-labelledby="quick-title">
+  <header class="screen-header quick-header"><strong id="quick-title">quick log</strong><button type="button" id="quick-add" aria-label="Quick logs ekle">+</button><button type="button" id="quick-edit" aria-label="Edit"></button><button type="button" id="quick-close" aria-label="Close">×</button></header>
+  <div id="quick-grid"></div>
+  <p id="quick-status" role="status"></p>
+</dialog>
+<dialog id="quick-manager" class="full-screen" aria-labelledby="quick-manager-title">
+  <header class="screen-header"><button type="button" id="quick-back" aria-label="Back">‹</button><img src="assets/milog-logo.svg" alt=""><h2 id="quick-manager-title">Manage quick logs</h2><button type="button" id="quick-manager-x" aria-label="Close">×</button></header>
+  <div class="quick-help-row"><p id="quick-help">Select a quick log to add an entry. Drag its handle to reorder.</p><button type="button" id="quick-search-toggle" aria-label="Ara"></button></div>
+  <input type="search" id="quick-search" aria-label="Quick logs ara" placeholder="Quick logs ara" hidden>
+  <div id="quick-list"></div>
+  <p id="quick-manager-status" role="status"></p>
+  <button type="button" id="quick-manager-add" aria-label="Quick logs ekle">+</button>
+  <footer class="quick-footer"><button type="button" id="quick-footer-add" hidden>Add quick log</button><button type="button" id="quick-folder-add" hidden>Create list</button><button type="button" id="quick-manage-edit">düzenle</button><button type="button" id="quick-manage-close">kapat</button></footer>
+</dialog>
+<dialog id="quick-folder-editor" class="bottom-sheet" aria-labelledby="quick-folder-title">
+  <form id="quick-folder-form">
+    <h2 id="quick-folder-title">Log listesi oluştur</h2>
+    <label>Liste adı<input id="quick-folder-label" maxlength="60" required></label>
+    <label>Zaman dilimi<select id="quick-folder-period"><option value="all">Her zaman</option><option value="morning">Sabah</option><option value="day">Gündüz</option><option value="evening">Akşam</option><option value="night">Gece</option></select></label>
+    <button type="submit">Create list</button><button type="button" id="quick-folder-close">Cancel</button>
+  </form>
+</dialog>
+<dialog id="quick-editor" class="bottom-sheet">
+  <form id="quick-editor-form">
+    <header class="screen-header"><h2 id="quick-editor-title">New quick log</h2><button type="button" id="quick-editor-x" aria-label="Close">×</button></header>
+    <div class="quick-editor-main"><input id="quick-emoji" aria-label="Icon" placeholder="Icon" list="quick-symbols"><input id="quick-label" aria-label="Button name" placeholder="Button name: Kahve" maxlength="60" required></div>
+    <datalist id="quick-symbols"><option value="💧"><option value="☕"><option value="🚶"><option value="mdi:youtube"><option value="mdi:brain"></datalist>
+    <details><summary>Customize entry text</summary><label>Entry text<input id="quick-text"></label></details>
+    <label>Lists<select id="quick-editor-lists" multiple></select></label>
+    <details><summary>Add a measurement <small>Duration, count, or millilitres</small></summary><select id="quick-unit" aria-label="Ölçü birimi"><option value="none">Birim yok</option><option value="duration">Süre</option><option value="count">Adet</option><option value="volume">Mililitre</option></select><input id="quick-values" aria-label="Ölçü seçenekleri" placeholder="15, 30, 60"></details>
+    <button type="submit">Save</button><button type="button" id="quick-editor-close">Cancel</button>
+  </form>
+</dialog>
