@@ -19,6 +19,10 @@ let pickerMode;
 let month;
 let readWheels;
 let pickerCommit;
+let composeDefaults;
+let pickerInitialTime;
+const pickerNow = document.querySelector('#picker-now');
+const composeReset = document.querySelector('#compose-reset');
 
 function openComposeEditor(text, existingDate) {
   const now = new Date();
@@ -31,6 +35,8 @@ function openComposeEditor(text, existingDate) {
   start.setSeconds(0, 0);
   end = null;
   composeBody.value = text;
+  clearEntryTools(composeForm);
+  composeDefaults = { text, start: +start };
   composeSave.disabled = !text.trim();
   document.querySelector('#compose-title').textContent = agenda ? 'Agenda Entry' : 'New log';
   document.querySelector('#compose-date-row').hidden = agenda;
@@ -48,6 +54,7 @@ function setComposeAgendaSlot(slot) {
 }
 
 function updateComposeFields() {
+  updateComposeDirty();
   dateButton.textContent = start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   const time = timeFormat.format(start) + (end ? ' – ' + formatEnd(start, end) : '');
   timeButton.textContent = time;
@@ -56,6 +63,20 @@ function updateComposeFields() {
   document.querySelector('#agenda-manual').textContent = 'Set time manually · ' + timeFormat.format(start);
   if (agenda) drawQuarters();
 }
+
+function updateComposeDirty() {
+  if (!composeDefaults) return;
+  const attached = hasEntryAttachments(composeForm);
+  composeSave.disabled = !composeBody.value.trim() && !attached;
+  composeReset.hidden = !desktopMode() || (composeBody.value === composeDefaults.text && +start === composeDefaults.start && !end && !attached);
+}
+composeReset.addEventListener('click', () => {
+  start = new Date(composeDefaults.start);
+  end = null;
+  composeBody.value = composeDefaults.text;
+  clearEntryTools(composeForm);
+  updateComposeFields();
+});
 
 function formatEnd(from, to) {
   return timeFormat.format(to) + (dateKey(from) !== dateKey(to) ? ' (+1 day)' : '');
@@ -85,6 +106,7 @@ function drawQuarters() {
 function showComposePicker(mode, anchor, onCommit) {
   pickerCommit = onCommit;
   draftStart = new Date(start);
+  pickerInitialTime = timeFormat.format(draftStart);
   draftEnd = end && new Date(end);
   pickerMode = mode;
   month = new Date(start.getFullYear(), start.getMonth(), 1);
@@ -152,6 +174,7 @@ function timeWheel(count, initial, label) {
     value = ((value + delta) % count + count) % count;
     rows.forEach((row, index) => { row.textContent = twoDigits((value + index - 2 + count) % count); });
     wheel.setAttribute('aria-valuenow', String(value));
+    wheel.dispatchEvent(new Event('milog-time-change'));
   }
   function pan(distance) {
     remainder += distance;
@@ -187,6 +210,7 @@ function timeWheel(count, initial, label) {
 function renderPicker() {
   pickerStatus.textContent = '';
   endLink.hidden = pickerMode !== 'time' || Boolean(pickerCommit);
+  pickerNow.hidden = pickerMode !== 'time' || !desktopMode() || timeFormat.format(draftStart) === pickerInitialTime;
   if (pickerMode === 'date') {
     renderDatePicker();
     return;
@@ -234,7 +258,19 @@ function renderPicker() {
   } else pickerContent.append(wheels);
   hours.initialize();
   minutes.initialize();
+  const showNow = () => {
+    if (pickerMode === 'time' && desktopMode()) pickerNow.hidden = timeFormat.format(readWheels()) === pickerInitialTime;
+  };
+  hours.wheel.addEventListener('milog-time-change', showNow);
+  minutes.wheel.addEventListener('milog-time-change', showNow);
 }
+pickerNow.addEventListener('click', () => {
+  const now = new Date();
+  draftStart.setHours(now.getHours(), now.getMinutes(), 0, 0);
+  pickerInitialTime = timeFormat.format(draftStart);
+  if (draftEnd && draftEnd <= draftStart) draftEnd = null;
+  renderPicker();
+});
 
 dateButton.addEventListener('click', () => showComposePicker('date', dateButton));
 agendaDateButton.addEventListener('click', () => showComposePicker('date', agendaDateButton));
@@ -278,10 +314,10 @@ quarters.addEventListener('wheel', (event) => {
   event.preventDefault();
   quarters.scrollLeft += event.deltaY;
 }, { passive: false });
-composeBody.addEventListener('input', () => { composeSave.disabled = !composeBody.value.trim(); });
+composeBody.addEventListener('input', updateComposeDirty);
 document.querySelector('#compose-clear').addEventListener('click', () => {
   composeBody.value = '';
-  composeSave.disabled = true;
+  updateComposeDirty();
   composeBody.focus();
 });
 

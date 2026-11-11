@@ -27,7 +27,7 @@ Add-Content "$landing/css/style.css" '
 }
 New-Item -ItemType Directory -Force $screen, "$app/assets/fonts" | Out-Null
 
-Copy-Item "$root/preview/timeline.css", "$root/preview/timeline.js", "$PSScriptRoot/account.css", "$PSScriptRoot/account.js", "$PSScriptRoot/compose.js", "$PSScriptRoot/quick.js", "$PSScriptRoot/desktop.js" $screen -Force
+Copy-Item "$root/preview/timeline.css", "$root/preview/timeline.js", "$PSScriptRoot/account.css", "$PSScriptRoot/account.js", "$PSScriptRoot/compose.js", "$PSScriptRoot/quick.js", "$PSScriptRoot/desktop.js", "$PSScriptRoot/entry-tools.js" $screen -Force
 Copy-Item "$root/node_modules/@supabase/supabase-js/dist/umd/supabase.js" $screen -Force
 $settings = if (Test-Path "$root/.env") { ConvertFrom-StringData (Get-Content "$root/.env" -Raw) } else { @{} }
 $url = ($env:EXPO_PUBLIC_SUPABASE_URL ?? $settings.EXPO_PUBLIC_SUPABASE_URL ?? '').Trim('"', "'")
@@ -59,6 +59,7 @@ $accountScripts = @'
 <script src="screen/account.js" defer></script>
 <script src="screen/compose.js" defer></script>
 <script src="screen/quick.js" defer></script>
+<script src="screen/entry-tools.js" defer></script>
 <script src="screen/desktop.js" defer></script>
 </head>
 '@
@@ -85,6 +86,8 @@ foreach ($asset in (Get-ChildItem "$screen" -File)) {
   $html = $html.Replace(('screen/' + $asset.Name + '"'), ('screen/' + $asset.Name + '?v=' + $version + '"'))
 }
 Set-Content -Encoding utf8 "$app/index.html" $html
+# Rewrite one-segment profile URLs to the app shell when deployed as Worker assets.
+'/:username /index.html 200' | Set-Content -Encoding ascii "$app/_redirects"
 Write-Output "Prepared $landing and $app"
 if ($Release) {
   foreach ($script in (Get-ChildItem "$screen/*.js" -File)) {
@@ -100,5 +103,6 @@ if ($Release) {
   Compress-Archive -Path "$app/*" -DestinationPath $archive
   Write-Output "Created $archive"
 }
+
 
 

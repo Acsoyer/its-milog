@@ -172,7 +172,7 @@
     name.textContent = item.label;
     if (editing) {
       name.className = 'quick-edit-name';
-      name.dataset.editLabel = 'EDIT';
+      control.setAttribute('aria-label', 'Edit ' + item.label);
     }
     label.append(name);
     if (!item.category) {
@@ -400,8 +400,15 @@
     get('quick-unit').value = item?.measurementUnit ?? 'none';
     get('quick-values').value = (item?.measurementOptions?.length ? item.measurementOptions : item?.durationOptions ?? []).join(', ');
     const assignments = data.organization.assignments?.[item?.id] ?? [];
-    get('quick-editor-lists').replaceChildren(...(data.organization.categories ?? []).map((category) =>
-      new Option(category.label, category.id, false, assignments.includes(category.id))));
+    const list = get('quick-editor-lists');
+    list.replaceChildren();
+    for (const category of data.organization.categories ?? []) {
+      const chip = button(category.label, () => chip.setAttribute('aria-pressed', String(chip.getAttribute('aria-pressed') !== 'true')));
+      chip.dataset.category = category.id;
+      chip.setAttribute('aria-pressed', String(assignments.includes(category.id)));
+      list.append(chip);
+    }
+    if (!list.childElementCount) list.textContent = 'Create a list in Manage quick logs to assign entries.';
     editor.showModal();
   }
 
@@ -416,7 +423,7 @@
       measurementUnit, measurementOptions, durationOptions: measurementUnit === 'duration' ? measurementOptions : [],
       label, entryText: get('quick-text').value.trim() || label, emoji: get('quick-emoji').value.trim() };
     const actions = previous ? data.actions.map((item) => item.id === actionId ? action : item) : [...data.actions, action];
-    const folders = [...get('quick-editor-lists').selectedOptions].map((option) => option.value);
+    const folders = [...get('quick-editor-lists').querySelectorAll('[aria-pressed=true]')].map((chip) => chip.dataset.category);
     const organization = { ...data.organization, assignments: { ...data.organization.assignments, [action.id]: folders }, ...(order ? { quickOrder: order } : {}) };
     if (editing) {
       data.actions = actions;

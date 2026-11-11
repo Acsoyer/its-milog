@@ -8,7 +8,7 @@ function openWorkPanel(dialog) {
     dialog.showModal();
     return;
   }
-  for (const other of [calendar, detail, compose, quickManager, webAccount]) {
+  for (const other of [calendar, detail, compose, quickManager, webAccount, drawer, timelineSettings]) {
     if (other !== dialog && other.open) other.close();
   }
   if (!dialog.open) dialog.show();
@@ -19,6 +19,32 @@ function openWorkPanel(dialog) {
 
 let desktopMarkedLog = null;
 let desktopMonth = null;
+let desktopCalendarDay = null;
+const desktopCalendarMode = document.querySelector('#desk-calendar-mode');
+desktopCalendarMode.value = localStorage.getItem('milog-calendar-mode') === 'agenda' ? 'agenda' : 'journal';
+desktopCalendarMode.addEventListener('change', () => localStorage.setItem('milog-calendar-mode', desktopCalendarMode.value));
+function renderDesktopCalendarSelection() {
+  document.querySelector('#desk-calendar-selection').hidden = !desktopCalendarDay;
+  if (!desktopCalendarDay) return;
+  const date = shiftDate(desktopCalendarDay, 0);
+  document.querySelector('#desk-calendar-day').textContent = date.toLocaleDateString('en-GB', { dateStyle: 'full' });
+  const list = document.querySelector('#desk-calendar-entries');
+  list.replaceChildren();
+  for (const log of (accountLogs ?? []).filter((entry) => dateKey(new Date(entry.created_at)) === desktopCalendarDay)) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = timeFormat.format(new Date(log.created_at)) + ' · ' + log.body;
+    const show = () => {
+      desktopMarkedLog = log;
+      selectedDate = desktopCalendarDay;
+      switchView(desktopCalendarMode.value === 'agenda');
+    };
+    button.addEventListener('dblclick', show);
+    button.addEventListener('keydown', (event) => { if (event.key === 'Enter') show(); });
+    list.append(button);
+  }
+  if (!list.childElementCount) list.textContent = 'No entries on this day.';
+}
 function revealDesktopLog(log) {
   desktopMarkedLog = log;
   selectedDate = dateKey(new Date(log.created_at));
@@ -61,13 +87,13 @@ setInterval(updateDesktopClock, 1000);
 desktopQuery.addEventListener('change', closeWorkPanels);
 mobileLayout.addEventListener('change', closeWorkPanels);
 function closeWorkPanels() {
-  for (const dialog of [calendar, detail, compose, quickManager, webAccount]) dialog.close();
+  for (const dialog of [calendar, detail, compose, quickManager, webAccount, drawer, timelineSettings]) dialog.close();
 }
 
 for (const button of document.querySelectorAll('[data-click]')) {
   const source = document.getElementById(button.dataset.click);
   const icon = source.querySelector('svg');
-  if (icon && button.closest('.desktop-sidebar nav')) {
+  if (icon && button.closest('.desktop-sidebar nav, .desk-tabs')) {
     const graphic = icon.cloneNode(true);
     graphic.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
     graphic.setAttribute('aria-hidden', 'true');
@@ -121,13 +147,18 @@ function updateDesktop() {
     button.type = 'button';
     button.textContent = day.getDate();
     button.setAttribute('aria-label', day.toLocaleDateString('en-GB', { dateStyle: 'full' }));
-    button.setAttribute('aria-pressed', String(dateKey(day) === selectedDate));
+    button.setAttribute('aria-pressed', String(dateKey(day) === (desktopCalendarDay ?? selectedDate)));
     button.classList.toggle('other-month', day.getMonth() !== index);
     button.classList.toggle('has-records', (accountLogs ?? []).some((log) => dateKey(new Date(log.created_at)) === dateKey(day)));
-    button.addEventListener('click', () => focusDesktopDate(day));
+    button.addEventListener('click', () => {
+      desktopCalendarDay = dateKey(day);
+      updateDesktop();
+      month.querySelector('[aria-pressed=true]')?.focus({ preventScroll: true });
+    });
     days.append(button);
   }
   month.replaceChildren(caption, days);
+  renderDesktopCalendarSelection();
 }
 
 for (const [id, direction] of [['desk-month-prev', -1], ['desk-month-next', 1]]) {
@@ -139,7 +170,26 @@ for (const [id, direction] of [['desk-month-prev', -1], ['desk-month-next', 1]])
 }
 const inline = document.querySelector('#desk-inline');
 const inlineText = document.querySelector('#desk-inline-text');
+setupEntryTools(composeForm, composeBody, updateComposeDirty);
+setupEntryTools(inline, inlineText, refreshInlineDirty);
+inlineText.required = false;
+composeBody.required = false;
 let inlineDate;
+const inlineReset = document.querySelector('#desk-inline-reset');
+function refreshInlineDirty() {
+  const attached = hasEntryAttachments(inline);
+  inlineReset.hidden = !inlineText.value && !inlineDate && !attached;
+  inline.querySelector('[type=submit]').disabled = !inlineText.value.trim() && !attached;
+}
+inlineText.addEventListener('input', refreshInlineDirty);
+inlineReset.addEventListener('click', () => {
+  inline.reset();
+  inlineDate = undefined;
+  clearEntryTools(inline);
+  refreshInlineDates();
+  refreshInlineDirty();
+});
+refreshInlineDirty();
 function inlineDefaultDate() {
   const now = new Date();
   const date = shiftDate(selectedDate, 0);
@@ -160,29 +210,35 @@ for (const [id, mode] of [['desk-inline-day', 'date'], ['desk-inline-time', 'tim
     showComposePicker(mode, event.currentTarget, (date) => {
       inlineDate = date;
       refreshInlineDates();
+      refreshInlineDirty();
     });
     start = previousStart;
     end = previousEnd;
   });
 }
-document.querySelector('#desk-inline-options').addEventListener('click', () => openCompose(inlineText.value));
 inline.addEventListener('submit', async (event) => {
   event.preventDefault();
   const session = activeSession;
   const body = inlineText.value.trim();
-  if (!session || !body) return;
+  if (!session || (!body && !hasEntryAttachments(inline))) return;
   const button = inline.querySelector('[type=submit]');
   button.disabled = true;
   const date = inlineDate ?? inlineDefaultDate();
-  const { error } = await client.from('logs').insert({
-    id: crypto.randomUUID(), user_id: session.user.id, body, kind: 'text', visibility: 'private', created_at: date.toISOString(),
-  });
+  const id = crypto.randomUUID();
+  let error;
+  try {
+    const { payload, cleanup } = await entryPayload(inline, session.user.id, id, body);
+    ({ error } = await client.from('logs').insert({ id, user_id: session.user.id, ...payload, kind: 'text', visibility: 'private', created_at: date.toISOString() }));
+    if (error) await cleanup();
+  } catch (failure) { error = failure; }
   button.disabled = false;
   if (activeSession !== session) return;
   document.querySelector('#desk-inline-status').textContent = error ? 'Could not save entry. Try again.' : '';
   if (!error) {
     inline.reset();
+    clearEntryTools(inline);
     inlineDate = undefined;
+    refreshInlineDirty();
     selectedDate = dateKey(date);
     closeWorkPanels();
     await showTimeline(session);

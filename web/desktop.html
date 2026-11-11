@@ -3,22 +3,26 @@
   <button type="button" class="desk-create" data-click="create-log"><span aria-hidden="true">＋</span> New entry</button>
   <nav aria-label="Görünümler">
     <button type="button" data-click="today">⌂ <span>Today</span></button>
-    <button type="button" data-click="agenda-view">▤ <span>Agenda</span></button>
     <button type="button" data-click="log-view">▧ <span>Journal</span></button>
+    <button type="button" data-click="agenda-view">▤ <span>Agenda</span></button>
     <button type="button" data-click="calendar-view">▦ <span>Calendar</span></button>
   </nav>
   <section class="desk-quick"><h2 id="desk-quick-title">Quick logs</h2><button type="button" id="desk-quick-back" hidden>‹ Back</button><div id="desk-shortcuts"></div><button type="button" data-click="quick-logs">All quick logs <span aria-hidden="true">›</span></button></section>
   <footer><button type="button" data-click="profile-toggle">Profil</button><button type="button" data-click="settings-toggle">Settings</button></footer>
 </aside>
 <section class="desktop-heading" hidden aria-label="Çalışma alanı">
-  <nav class="desk-tabs" aria-label="Görünümler"><button type="button" data-click="log-view">Journal</button><button type="button" data-click="agenda-view">Agenda</button></nav>
+  <nav class="desk-tabs" aria-label="Görünümler"><button type="button" data-click="log-view"><span>Journal</span></button><button type="button" data-click="agenda-view"><span>Agenda</span></button></nav>
   <button type="button" id="desk-date" data-click="today" aria-label="Todaye dön"></button>
   <div class="desk-header-actions"><button type="button" id="desk-prev" aria-label="Previous day">‹</button><button type="button" id="desk-next" aria-label="Next day">›</button></div>
 </section>
-<form class="desk-inline" id="desk-inline" hidden><div class="desk-inline-date"><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div><textarea id="desk-inline-text" aria-label="Yeni günlük kaydı" placeholder="What’s happening?" required></textarea><footer><button type="button" id="desk-inline-options">Kayıt seçenekleri</button><button type="submit">Save</button></footer><p id="desk-inline-status" role="status"></p></form>
+<form class="desk-inline" id="desk-inline" hidden><div class="desk-inline-date"><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div><textarea id="desk-inline-text" aria-label="New journal entry" placeholder="What’s happening?" required></textarea><footer><button type="button" id="desk-inline-reset" hidden>Reset</button><button type="submit">Save</button></footer><p id="desk-inline-status" role="status"></p></form>
 <aside class="desktop-context" hidden aria-label="Gün görünümü">
   <input id="desk-search" type="search" placeholder="Search entries" aria-label="Search entries">
   <div id="desk-search-results" hidden></div>
   <header><strong>Calendar</strong><button type="button" id="desk-month-prev" aria-label="Previous month">‹</button><button type="button" id="desk-month-next" aria-label="Next month">›</button></header>
   <div id="desk-month"></div>
+  <section id="desk-calendar-selection" hidden>
+    <h3 id="desk-calendar-day"></h3><div id="desk-calendar-entries"></div>
+    <label>Open entry in <select id="desk-calendar-mode"><option value="journal">Journal</option><option value="agenda">Agenda</option></select></label>
+  </section>
 </aside>

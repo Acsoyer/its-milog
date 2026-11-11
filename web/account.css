@@ -528,3 +528,79 @@
     padding: 7px 9px; border: 1px solid var(--rule); border-radius: 8px; text-decoration: none;
   }
 }
+.entry-tools, .entry-tools-preview { display: none; }
+.entry-tool-picker { border: 1px solid #ded9d0; border-radius: 12px; padding: 14px; }
+.entry-tool-picker form { display: flex; gap: 8px; }
+.entry-tool-picker input { min-width: 0; padding: 8px; border: 1px solid #ded9d0; border-radius: 8px; }
+.entry-tool-picker button { color: white; background: #173b67; border-radius: 8px; padding: 8px 14px; }
+@media (min-width: 980px) and (hover: hover) and (pointer: fine) {
+  .desk-tabs button { display: inline-flex; align-items: center; gap: 6px; min-height: 42px; }
+  .desktop-heading .desk-tabs button { padding-inline: 9px; }
+  .desk-tabs svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .desktop-heading .desk-header-actions button { min-width: 42px; min-height: 40px; }
+  :root.milog-signed-in:not(.force-mobile) .desktop-heading { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); }
+  #desk-calendar-selection { margin-top: 16px; }
+  #desk-calendar-selection h3 { font-size: 13px; margin: 0 0 8px; }
+  #desk-calendar-entries { display: grid; gap: 4px; font-size: 13px; margin-bottom: 12px; }
+  #desk-calendar-entries button { text-align: left; padding: 8px; border-bottom: 1px solid var(--rule); overflow-wrap: anywhere; }
+  #desk-calendar-selection label { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 13px; }
+  #desk-calendar-mode { font: inherit; padding: 7px; border: 1px solid var(--rule); border-radius: 8px; }
+  .agenda-slot-row { position: relative; }
+  .agenda-slot-add { position: absolute; inset: 2px 5px 2px auto; padding: 0 9px; border: 1px solid #bacfe3; border-radius: 6px; color: #173b67; background: #edf4fb; font-size: 11px; }
+  .agenda-hour:not([aria-pressed=true]) + .agenda-slot-add { display: none; }
+  :root.milog-signed-in:not(.force-mobile) .timeline:not(.agenda-view) .entry { margin-bottom: 0; box-shadow: inset 0 -2px var(--rule); }
+  .entry-highlight { background: #fff3d4; }
+  :root.milog-signed-in:not(.force-mobile) .phone > :is(#web-log-detail, #compose-dialog, #quick-manager, #web-account, #profile-drawer, #timeline-settings) {
+    position: absolute; inset: 0 0 0 auto; width: var(--desk-context); height: 100%; max-height: none; max-width: none; margin: 0; padding: 0;
+    background: white; color: #171716; border: 0; border-left: 1px solid #e7e1d7; border-radius: 0; z-index: 5;
+    opacity: 0; transform: translateX(28px); transition: opacity .18s ease, transform .18s ease, display .18s allow-discrete;
+  }
+  :root.milog-signed-in:not(.force-mobile) .phone > :is(#web-log-detail, #compose-dialog, #quick-manager, #web-account, #profile-drawer, #timeline-settings)[open] {
+    opacity: 1; transform: none; animation: none;
+  }
+  @starting-style {
+    :root.milog-signed-in:not(.force-mobile) .phone > :is(#web-log-detail, #compose-dialog, #quick-manager, #web-account, #profile-drawer, #timeline-settings)[open] { opacity: 0; transform: translateX(28px); }
+  }
+  :root.milog-signed-in:not(.force-mobile) .phone:has(> :is(#profile-drawer, #timeline-settings)[open]) .desktop-context { visibility: hidden; }
+  :root.milog-signed-in:not(.force-mobile) #timeline-settings > label { display: flex; padding: 16px; gap: 8px; }
+  :root.milog-signed-in:not(.force-mobile) #profile-drawer .profile-identity { padding-top: 48px; }
+  :root.milog-signed-in:not(.force-mobile) #web-log-detail[open] { background: #f6f3ed; padding: 16px; }
+  :root.milog-signed-in:not(.force-mobile) #web-log-detail article { border: 1px solid #e7e1d7; min-height: 0; border-radius: 14px; }
+  #web-log-detail footer { justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
+  #web-log-detail footer button { border: 1px solid #ded9d0; border-radius: 8px; padding: 7px 9px; font-size: 12px; }
+  #web-log-detail footer button[aria-pressed=true] { background: #e3edf8; color: #173b67; }
+  #detail-attachments img, #detail-attachments audio { max-width: 100%; margin-top: 8px; }
+  :root.milog-signed-in:not(.force-mobile) .entry-tools, :root.milog-signed-in:not(.force-mobile) .entry-tools-preview { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .entry-tools button { display: grid; place-items: center; border: 1px solid transparent; padding: 6px; border-radius: 8px; color: #173b67; background: transparent; }
+  .entry-tools button:hover { background: #eaf0f6; border-color: #dce7f2; }
+  .entry-tools svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .entry-tools-preview:empty { display: none !important; }
+  .entry-tools-preview button { background: #eaf0f6; border-radius: 8px; padding: 5px 8px; font-size: 12px; }
+  #compose-dialog .compose-writing { display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: minmax(120px,1fr) auto auto; align-items: start; }
+  #compose-dialog #compose-body { grid-area: 1 / 1; min-height: 120px; align-self: stretch; }
+  #compose-dialog #compose-clear { grid-area: 1 / 2; }
+  #compose-dialog .entry-tools, #compose-dialog .entry-tools-preview { grid-column: 1 / -1; margin: 4px 0 4px 20px; }
+  #desk-inline footer { justify-content: flex-end; gap: 8px; }
+  #compose-dialog .compose-actions { display: flex; gap: 8px; }
+  #compose-dialog .compose-actions button[type=submit] { flex: 1; }
+  #picker-now { background: #eaf0f6; color: #173b67; padding: 8px 12px; border-radius: 8px; font-weight: 700; }
+  #quick-list .quick-row > button:first-child { min-width: 0; gap: 8px; }
+  #quick-list .quick-row > button:first-child > span:not(.quick-icon) { min-width: 0; }
+  #quick-list .quick-row strong, #quick-list .quick-row small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #quick-list .quick-row > button:first-child:hover { background: #edf4fb; }
+  .quick-row > button:first-child:hover .quick-edit-name { color: #173b67; }
+  .quick-row > button:first-child:hover .quick-edit-name::after { content: none; }
+  #quick-list .quick-grip { user-select: none; }
+  .quick-list-field { border: 0; padding: 8px 0; margin: 0; }
+  #quick-editor-lists { display: flex; flex-wrap: wrap; gap: 6px; }
+  #quick-editor-lists button { border: 1px solid var(--rule); border-radius: 999px; padding: 6px 10px; }
+  #quick-editor-lists button[aria-pressed=true] { background: #dce7f2; color: #173b67; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .phone > dialog { transition: none !important; }
+}
+#settings-mobile-view { display: none; }
+@media (min-width: 980px) and (hover: hover) and (pointer: fine) {
+  :root.milog-signed-in:not(.force-mobile) #settings-mobile-view { display: block; margin: 16px; padding: 9px 12px; background: #eaf0f6; color: #173b67; border-radius: 8px; }
+  .desktop-heading #desk-date { max-width: clamp(105px, 14vw, 210px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

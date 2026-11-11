@@ -82,7 +82,7 @@ citySelect.addEventListener('change', () => {
 });
 updateSky();
 setInterval(updateSky, 60000);
-avatar.addEventListener('click', () => drawer.showModal());
+avatar.addEventListener('click', () => openWorkPanel(drawer));
 const detail = document.querySelector('#web-log-detail');
 const timelineMenu = document.querySelector('#timeline-menu');
 const timelineSettings = document.querySelector('#timeline-settings');
@@ -101,6 +101,10 @@ mobileLayout.addEventListener('change', () => {
   timelineMenu.close();
 });
 updateLayout();
+document.querySelector('#settings-mobile-view').addEventListener('click', () => {
+  timelineSettings.close();
+  mobileLayout.click();
+});
 profileTheme.value = localStorage.getItem('milog-web-theme') === 'dark' ? 'dark' : 'light';
 function updateTheme() {
   phone.classList.toggle('theme-dark', profileTheme.value === 'dark');
@@ -119,7 +123,11 @@ sortToggle.addEventListener('change', () => {
 });
 document.querySelector('#settings-toggle').addEventListener('click', () => {
   document.querySelector('#timeline-settings-open').textContent = agenda ? 'Agenda settings' : 'Journal settings';
-  timelineMenu.showModal();
+  if (desktopMode()) {
+    document.querySelector('#timeline-settings-title').textContent = 'Settings';
+    document.querySelector('#timeline-sort-row').hidden = !agenda;
+    openWorkPanel(timelineSettings);
+  } else timelineMenu.showModal();
 });
 timelineMenu.addEventListener('click', (event) => { if (event.target === timelineMenu) timelineMenu.close(); });
 document.querySelector('#timeline-settings-open').addEventListener('click', (event) => {
@@ -145,8 +153,59 @@ function openLogDetail(log) {
   document.querySelector('#detail-date').textContent = date.toLocaleDateString('en-GB', { dateStyle: 'full' });
   document.querySelector('#detail-body').textContent = log.body;
   document.querySelector('#detail-status').textContent = '';
+  const attachments = document.querySelector('#detail-attachments');
+  attachments.replaceChildren();
+  for (const [field, bucket, tag] of [['image_path', 'log-images', 'img'], ['audio_path', 'log-audio', 'audio']]) {
+    if (!log[field]) continue;
+    client.storage.from(bucket).createSignedUrl(log[field], 300).then(({ data }) => {
+      if (!data || currentDetail !== log || !detail.open) return;
+      const media = document.createElement(tag);
+      media.src = data.signedUrl;
+      if (tag === 'img') media.alt = 'Entry photo';
+      else media.controls = true;
+      attachments.append(media);
+    });
+  }
+  refreshDetailActions();
   openWorkPanel(detail);
 }
+function entryFlag(log, flag) {
+  return 'milog-entry:' + activeSession?.user.id + ':' + log.id + ':' + flag;
+}
+function refreshDetailActions() {
+  for (const [id, flag, off, on] of [
+    ['detail-hide', 'hidden', 'Hide', 'Show'],
+    ['detail-highlight', 'highlight', 'Highlight of the day', 'Remove highlight'],
+  ]) {
+    const button = document.getElementById(id);
+    const enabled = localStorage.getItem(entryFlag(currentDetail, flag)) === '1';
+    button.textContent = enabled ? on : off;
+    button.setAttribute('aria-pressed', String(enabled));
+  }
+}
+for (const [id, flag] of [['detail-hide', 'hidden'], ['detail-highlight', 'highlight']]) {
+  document.getElementById(id).addEventListener('click', () => {
+    if (!currentDetail || !activeSession) return;
+    const key = entryFlag(currentDetail, flag);
+    if (localStorage.getItem(key)) localStorage.removeItem(key);
+    else localStorage.setItem(key, '1');
+    refreshDetailActions();
+    if (accountLogs) renderLogs(accountLogs);
+  });
+}
+document.querySelector('#detail-share').addEventListener('click', async () => {
+  if (!currentDetail?.body || !confirm('Share the text of this entry?')) return;
+  const status = document.querySelector('#detail-status');
+  try {
+    if (navigator.share) await navigator.share({ text: currentDetail.body });
+    else {
+      await navigator.clipboard.writeText(currentDetail.body);
+      status.textContent = 'Entry text copied.';
+    }
+  } catch (error) {
+    if (error.name !== 'AbortError') status.textContent = 'Could not share this entry.';
+  }
+});
 document.querySelector('#detail-edit').addEventListener('click', () => {
   editedLog = currentDetail;
   detail.close();
@@ -173,6 +232,10 @@ document.querySelector('#detail-delete').addEventListener('click', async (event)
 
 function populateProfile(user) {
   const name = user.user_metadata?.display_name || user.email?.split('@')[0] || 'Milog';
+  if (desktopMode()) {
+    const username = String(user.user_metadata?.username || user.email?.split('@')[0] || 'milog').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'milog';
+    if (location.pathname !== '/' + username) history.replaceState(null, '', '/' + username);
+  }
   document.querySelector('#profile-name').textContent = name;
   document.querySelector('#profile-email').textContent = '@' + (user.user_metadata?.username || user.email?.split('@')[0] || 'milog');
   document.querySelector('#web-account-name').textContent = name;
@@ -190,12 +253,16 @@ function populateProfile(user) {
 }
 
 function showAccount() {
+  if (location.pathname !== '/') history.replaceState(null, '', '/');
+  desktopCalendarDay = null;
   desktopMarkedLog = null;
   desktopMonth = null;
   inlineDate = undefined;
   document.querySelector('#desk-search').value = '';
   renderDesktopSearch();
   document.querySelector('#desk-inline').reset();
+  clearEntryTools(document.querySelector('#desk-inline'));
+  refreshInlineDirty();
   document.querySelector('#desk-shortcuts').replaceChildren();
   document.documentElement.classList.remove('milog-signed-in');
   accountVersion += 1;
@@ -298,13 +365,31 @@ function makeAgendaDay(date, scheduled) {
       if (compose.open) setComposeAgendaSlot(row.dataset.slot);
       else openCompose();
     });
+    const slotRow = document.createElement('div');
+    slotRow.className = 'agenda-slot-row';
+    slotRow.append(row);
+    if (desktopMode()) {
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'agenda-slot-add';
+      add.textContent = '+ Add entry';
+      add.addEventListener('click', () => {
+        selectedAgendaSlot = row.dataset.slot;
+        selectedDate = day.dataset.date;
+        timeline.querySelector('.agenda-hour[aria-pressed=true]')?.setAttribute('aria-pressed', 'false');
+        row.setAttribute('aria-pressed', 'true');
+        if (compose.open) setComposeAgendaSlot(row.dataset.slot);
+        else openCompose();
+      });
+      slotRow.append(add);
+    }
     const label = document.createElement('time');
     label.textContent = String(hour).padStart(2, '0') + ':00';
     const entries = scheduled.filter((item) => new Date(item.created_at).getHours() === hour);
     if (!sortToggle.checked) entries.reverse();
     if (!entries.length) label.className = 'empty-hour';
     row.append(label);
-    group.append(row);
+    group.append(slotRow);
     for (const log of entries) {
       const button = document.createElement('button');
       button.className = 'agenda-record';
@@ -312,7 +397,7 @@ function makeAgendaDay(date, scheduled) {
       const time = document.createElement('time');
       time.textContent = new Date(log.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
       const body = document.createElement('span');
-      body.textContent = log.body;
+      body.textContent = desktopMode() && localStorage.getItem(entryFlag(log, 'hidden')) ? 'Hidden entry' : [log.emoji, log.body].filter(Boolean).join(' ');
       button.append(time, body);
       button.addEventListener('click', () => openLogDetail(log));
       group.append(button);
@@ -477,7 +562,8 @@ function renderLogs(logs) {
     const record = document.createElement('button');
     record.className = 'record';
     const body = document.createElement('span');
-    body.textContent = log.body;
+    body.textContent = desktopMode() && localStorage.getItem(entryFlag(log, 'hidden')) ? 'Hidden entry' : [log.emoji, log.body].filter(Boolean).join(' ');
+    if (desktopMode() && localStorage.getItem(entryFlag(log, 'highlight'))) entry.classList.add('entry-highlight');
     record.append(body);
     record.addEventListener('click', () => { if (!desktopMode()) openLogDetail(log); });
     record.addEventListener('dblclick', () => { if (desktopMode()) openLogDetail(log); });
@@ -512,7 +598,7 @@ async function showTimeline(session) {
   const logs = [];
   const pageSize = 500;
   for (let offset = 0; ; offset += pageSize) {
-    const { data, error } = await client.from('logs').select('id,body,created_at')
+    const { data, error } = await client.from('logs').select('id,body,created_at,emoji,image_path,audio_path')
       .eq('user_id', session.user.id).order('created_at', { ascending: false })
       .order('id').range(offset, offset + pageSize - 1);
     if (version !== accountVersion) return;
@@ -624,6 +710,11 @@ function renderCalendarRecords() {
 }
 
 function openCalendar(focusSearch = false) {
+  if (desktopMode()) {
+    closeWorkPanels();
+    if (focusSearch) document.querySelector('#desk-search').focus();
+    return;
+  }
   calendarDay = selectedDate;
   calendarSearch.value = '';
   renderCalendarAt(new Date(calendarDay + 'T12:00:00'));
@@ -656,16 +747,21 @@ composeForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const session = activeSession;
   const body = composeBody.value.trim();
-  if (!session || !body) return;
+  if (!session || (!body && !hasEntryAttachments(composeForm))) return;
   const timing = composeTiming();
   if (!timing) return;
   const save = composeForm.querySelector('[type=submit]');
   save.disabled = true;
-  const { error } = editedLog
-    ? await client.from('logs').update({ body, ...timing }).eq('id', editedLog.id).eq('user_id', session.user.id)
-    : await client.from('logs').insert({
-      id: crypto.randomUUID(), user_id: session.user.id, body, kind: 'text', visibility: 'private', ...timing,
-    });
+  const editing = editedLog;
+  const id = editing?.id ?? crypto.randomUUID();
+  let error;
+  try {
+    const { payload, cleanup } = await entryPayload(composeForm, session.user.id, id, body);
+    ({ error } = editing
+      ? await client.from('logs').update({ ...payload, ...timing }).eq('id', id).eq('user_id', session.user.id)
+      : await client.from('logs').insert({ id, user_id: session.user.id, ...payload, kind: 'text', visibility: 'private', ...timing }));
+    if (error) await cleanup();
+  } catch (failure) { error = failure; }
   save.disabled = false;
   if (activeSession?.user.id !== session.user.id) return;
   if (error) {
@@ -675,6 +771,7 @@ composeForm.addEventListener('submit', async (event) => {
     return;
   }
   composeForm.reset();
+  clearEntryTools(composeForm);
   compose.close();
   await showTimeline(session);
   if (calendar.open) renderCalendar();

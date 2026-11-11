@@ -26,6 +26,7 @@
 </dialog>
 <dialog id="timeline-settings" class="bottom-sheet">
   <form method="dialog" class="screen-header"><h2 id="timeline-settings-title"></h2><button aria-label="Close">×</button></form>
+  <button id="settings-mobile-view" type="button">Switch to mobile view</button>
   <label id="timeline-sort-row"><input id="timeline-sort" type="checkbox"> Geç saatler üstte</label>
 </dialog>
 <dialog id="timeline-activity" class="bottom-sheet"><form method="dialog" class="screen-header"><h2>Recent activity</h2><button aria-label="Close">×</button></form><div id="web-activity-list"></div></dialog>
@@ -33,7 +34,8 @@
   <article>
     <header><time id="detail-time"></time><form method="dialog"><button aria-label="Close">×</button></form></header>
     <p id="detail-date"></p><p id="detail-body"></p>
-    <footer><button type="button" id="detail-edit">Edit</button><button type="button" id="detail-delete">Delete</button></footer>
+    <div id="detail-attachments"></div>
+    <footer><button type="button" id="detail-edit">Edit</button><button type="button" id="detail-delete">Delete</button><button type="button" id="detail-share">Share</button><button type="button" id="detail-hide">Hide</button><button type="button" id="detail-highlight">Highlight of the day</button></footer>
     <p id="detail-status" role="status"></p>
   </article>
 </dialog>
@@ -65,13 +67,13 @@
     </section>
     <div class="compose-writing"><textarea id="compose-body" aria-label="Entry text" placeholder="What’s happening?" required rows="5"></textarea><button type="button" id="compose-clear" aria-label="Metni temizle">×</button></div>
     <p id="compose-status" role="status"></p>
-    <footer class="compose-actions"><button type="button" id="compose-cancel">Cancel</button><button type="submit" disabled>Save</button></footer>
+    <footer class="compose-actions"><button type="button" id="compose-reset" hidden>Reset</button><button type="button" id="compose-cancel">Cancel</button><button type="submit" disabled>Save</button></footer>
   </form>
 </dialog>
 <dialog id="compose-picker" aria-label="Tarih ve saat seçimi">
   <div id="compose-picker-content"></div>
   <p id="picker-status" role="status"></p>
-  <footer><button type="button" id="picker-end-link">+ End time</button><button type="button" id="picker-confirm">Done</button></footer>
+  <footer><button type="button" id="picker-now" hidden>Now</button><button type="button" id="picker-end-link">+ End time</button><button type="button" id="picker-confirm">Done</button></footer>
 </dialog>
 <dialog id="quick-sheet" class="bottom-sheet" aria-labelledby="quick-title">
   <header class="screen-header quick-header"><strong id="quick-title">quick log</strong><button type="button" id="quick-add" aria-label="Quick logs ekle">+</button><button type="button" id="quick-edit" aria-label="Edit"></button><button type="button" id="quick-close" aria-label="Close">×</button></header>
@@ -101,7 +103,7 @@
     <div class="quick-editor-main"><input id="quick-emoji" aria-label="Icon" placeholder="Icon" list="quick-symbols"><input id="quick-label" aria-label="Button name" placeholder="Button name: Kahve" maxlength="60" required></div>
     <datalist id="quick-symbols"><option value="💧"><option value="☕"><option value="🚶"><option value="mdi:youtube"><option value="mdi:brain"></datalist>
     <details><summary>Customize entry text</summary><label>Entry text<input id="quick-text"></label></details>
-    <label>Lists<select id="quick-editor-lists" multiple></select></label>
+    <fieldset class="quick-list-field"><legend>Lists</legend><div id="quick-editor-lists"></div></fieldset>
     <details><summary>Add a measurement <small>Duration, count, or millilitres</small></summary><select id="quick-unit" aria-label="Ölçü birimi"><option value="none">Birim yok</option><option value="duration">Süre</option><option value="count">Adet</option><option value="volume">Mililitre</option></select><input id="quick-values" aria-label="Ölçü seçenekleri" placeholder="15, 30, 60"></details>
     <button type="submit">Save</button><button type="button" id="quick-editor-close">Cancel</button>
   </form>
