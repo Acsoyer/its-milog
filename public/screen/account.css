@@ -697,3 +697,4 @@
   :root.milog-dark.milog-signed-in:not(.force-mobile) .phone .timeline.agenda-view .day { --day-paper: #202b37; --rule: #313e4b; }
   :root.milog-dark.milog-signed-in:not(.force-mobile) .timeline:not(.agenda-view) .entry { box-shadow: inset 0 -1px var(--rule); }
 }
+.entry-polaroid.photo-loading { visibility: hidden; }

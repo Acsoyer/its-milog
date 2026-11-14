@@ -83,7 +83,7 @@ function appendPolaroid(parent, log) {
   const photo = document.createElement('img');
   photo.className = 'entry-polaroid';
   photo.alt = 'Entry photo';
-  photo.hidden = true;
+  photo.classList.add('photo-loading');
   photo.loading = 'lazy';
   const key = log.image_path;
   if (!photoUrls.has(key)) {
@@ -99,7 +99,8 @@ function appendPolaroid(parent, log) {
   cached.request.then(({ data, error }) => {
     if (error) photoUrls.delete(key);
     if (!parent.isConnected || !data?.signedUrl) return;
-    photo.addEventListener('load', () => { photo.hidden = false; }, { once: true });
+    photo.addEventListener('load', () => photo.classList.remove('photo-loading'), { once: true });
+    photo.addEventListener('error', () => photo.remove(), { once: true });
     photo.src = data.signedUrl;
   }).catch(() => photoUrls.delete(key));
 }
