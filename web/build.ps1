@@ -53,7 +53,9 @@ $emojiEnd = $icons.IndexOf("emojiCategories.Tümü =", $emojiStart)
 if ($emojiStart -lt 0 -or $emojiEnd -lt 0) { throw 'Mobile emoji catalog not found.' }
 $emojiEnd = $icons.IndexOf(";", $emojiEnd) + 1
 $emojiData = $icons.Substring($emojiStart, $emojiEnd - $emojiStart) + "`nwindow.MilogEmoji = emojiCategories;"
-$emojiData | node -e "const fs = require('fs'); const ts = require('typescript'); process.stdout.write(ts.transpile(fs.readFileSync(0, 'utf8')));" | Set-Content -Encoding utf8 "$screen/emoji.js"
+$emojiJs = $emojiData | node -e "const fs = require('fs'); const ts = require('typescript'); process.stdout.write(ts.transpile(fs.readFileSync(0, 'utf8'), { target: ts.ScriptTarget.ES2020 }));"
+if ($LASTEXITCODE) { throw 'Emoji catalog compilation failed.' }
+Set-Content -Encoding utf8 "$screen/emoji.js" $emojiJs
 $html = Get-Content "$root/preview/index.html" -Raw
 $html = $html.Replace('Milog · Timeline Önizleme', 'Milog')
 $html = $html.Replace('href="timeline.css"', 'href="screen/timeline.css"')
