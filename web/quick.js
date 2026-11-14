@@ -222,6 +222,9 @@
           drag.ghost.classList.add('quick-drag-ghost');
           drag.ghost.setAttribute('aria-hidden', 'true');
           drag.ghost.style.width = row.getBoundingClientRect().width + 'px';
+          drag.ghost.style.height = row.getBoundingClientRect().height + 'px';
+          drag.ghost.inert = true;
+          row.classList.add('quick-drag-source');
           manager.append(drag.ghost);
         }
         drag.ghost.style.left = row.getBoundingClientRect().left + 'px';
@@ -238,6 +241,7 @@
       handle.addEventListener('pointerup', () => {
         const pending = drag;
         pending?.ghost?.remove();
+        row.classList.remove('quick-drag-source');
         drag = null;
         list.querySelector('.drop-target')?.classList.remove('drop-target');
         if (pending && suppressClick) void move(item.token, pending.target, folderId, pending.after);
@@ -245,6 +249,7 @@
       });
       handle.addEventListener('pointercancel', () => {
         drag?.ghost?.remove();
+        row.classList.remove('quick-drag-source');
         drag = null;
         suppressClick = false;
         list.querySelector('.drop-target')?.classList.remove('drop-target');

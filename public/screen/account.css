@@ -647,3 +647,53 @@
 :root.milog-dark .phone :is(.date-meta, .date-meta span, #desk-date, .desk-days small, .desk-quick h2, #profile-email, .profile-rows b, .compose-wheel div, .compose-range small) { color: #aeb8c6; }
 :root.milog-dark .phone .compose-wheel .selected { color: #fff; }
 :root.milog-dark .phone :is(.desk-brand img, .screen-header > img, .auth-desktop-logo, .auth-mobile-logo) { filter: brightness(0) invert(1); }
+#desk-date { display: flex; flex-direction: column; align-items: center; }
+#desk-date span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+#desk-date time { font-variant-numeric: tabular-nums; font-weight: 700; }
+#desk-profile { display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border-radius: 50%; overflow: hidden; background: #dce7f2; color: #173b67; }
+#desk-profile img { width: 100%; height: 100%; object-fit: cover; }
+#profile-theme-toggle { margin-left: auto; display: flex; gap: 4px; border-radius: 999px; padding: 3px; border: 1px solid var(--rule); }
+#profile-theme-toggle span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: inherit; }
+#profile-theme-toggle[aria-pressed=false] span:first-child, #profile-theme-toggle[aria-pressed=true] span:last-child { background: #527ba3; color: white; }
+#profile-drawer #profile-language, .web-account-content input, #special-days-form :is(input, select), #timeline-direction { border: 1px solid var(--rule); border-radius: 9px; padding: 8px 10px; font: inherit; }
+.web-account-content dd { margin: 0 0 12px; overflow-wrap: anywhere; }
+.web-account-content dt { color: var(--muted); font-size: 12px; }
+#web-password-form label, #special-days-form label { display: grid; gap: 4px; min-width: 0; }
+#web-password-form button, #special-days-form button { margin-top: 12px; background: #315980; color: white; border-radius: 8px; padding: 8px 12px; }
+#special-days-form, #special-days-list { padding: 14px 18px; }
+#special-days-form { display: grid; gap: 8px; }
+.special-date { display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 8px; }
+.special-date input { width: 100%; }
+#special-days-list li { display: flex; justify-content: space-between; gap: 8px; padding: 8px; border-bottom: 1px solid var(--rule); }
+.celebration { padding: 9px 12px; margin-bottom: 8px; background: #f4e6b4; color: #543f19; border-radius: 8px; }
+.entry-polaroid { box-sizing: border-box; display: block; width: min(112px, 100%); aspect-ratio: 1; object-fit: cover; background: #fffdf7; padding: 5px 5px 14px; border-radius: 2px; box-shadow: 0 2px 5px #0003; transform: rotate(1.5deg); margin: 5px 8px 7px auto; grid-column: 2; }
+.entry-tool-picker { width: min(420px, 90vw); }
+.entry-tool-picker form { display: grid; }
+.emoji-segments { display: flex; gap: 4px; flex-wrap: wrap; }
+.emoji-segments button { background: transparent; color: inherit; font-size: 12px; }
+.emoji-segments button[aria-pressed=true] { background: #315980; color: white; }
+.emoji-grid { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); max-height: 250px; overflow: auto; }
+.emoji-grid button { padding: 5px; font-size: 19px; background: transparent; }
+#desk-inline-text:focus, #compose-body:focus { outline: none; box-shadow: none; }
+#quick-manager .quick-drag-ghost { display: flex; box-sizing: border-box; padding: 0; opacity: .55; }
+#quick-list .quick-drag-source { background: #cbd0d5; }
+#quick-manager .quick-drag-ghost button { min-width: 0; padding: 5px 10px; display: flex; align-items: center; gap: 8px; }
+#quick-manager .quick-drag-ghost > button:first-child { flex: 1; overflow: hidden; }
+#quick-manager .quick-drag-ghost strong, #quick-manager .quick-drag-ghost small { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-align: left; }
+@media (min-width: 980px) and (hover: hover) and (pointer: fine) {
+  :root.milog-signed-in:not(.force-mobile) .timeline .day { --day-paper: #faf5e9; background: var(--day-paper); overflow: clip; }
+  :root.milog-signed-in:not(.force-mobile) .timeline.agenda-view .day { --day-paper: #f2f7fc; }
+  :root.milog-signed-in:not(.force-mobile) .timeline .date { position: sticky; top: 0; z-index: 1; background: var(--day-paper); }
+  :root.milog-signed-in:not(.force-mobile) #special-days[open] { position: absolute; inset: 0 0 0 auto; width: var(--desk-context); max-width: none; height: 100%; max-height: none; padding: 0; margin: 0; border: 0; border-radius: 0; background: #fff; color: #171716; z-index: 6; }
+  :root.milog-signed-in:not(.force-mobile) .phone:has(#special-days[open]) .desktop-context { visibility: hidden; }
+  .desktop-context { flex-direction: column; }
+  :root.milog-signed-in:not(.force-mobile) .desktop-context { display: flex; }
+  #desk-calendar-selection:not([hidden]) { flex: 1; display: flex; flex-direction: column; }
+  #desk-calendar-selection label { margin-top: auto; padding-top: 12px; }
+  .agenda-hour time, .agenda-record time { font-family: 'Barlow', system-ui, sans-serif; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: .035em; }
+  .agenda-hour time { font-size: 16px; }
+  :root.milog-dark.milog-signed-in:not(.force-mobile) { background: #10151a; }
+  :root.milog-dark.milog-signed-in:not(.force-mobile) .phone .timeline .day { --day-paper: #292821; --rule: #3b382f; background: var(--day-paper) !important; }
+  :root.milog-dark.milog-signed-in:not(.force-mobile) .phone .timeline.agenda-view .day { --day-paper: #202b37; --rule: #313e4b; }
+  :root.milog-dark.milog-signed-in:not(.force-mobile) .timeline:not(.agenda-view) .entry { box-shadow: inset 0 -1px var(--rule); }
+}

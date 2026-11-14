@@ -8,7 +8,7 @@ function openWorkPanel(dialog) {
     dialog.showModal();
     return;
   }
-  for (const other of [calendar, detail, compose, quickManager, webAccount, drawer, timelineSettings]) {
+  for (const other of [calendar, detail, compose, quickManager, webAccount, drawer, timelineSettings, document.querySelector('#special-days')]) {
     if (other !== dialog && other.open) other.close();
   }
   if (!dialog.open) dialog.show();
@@ -79,7 +79,12 @@ function renderDesktopSearch() {
 document.querySelector('#desk-search').addEventListener('input', renderDesktopSearch);
 function updateDesktopClock() {
   const date = shiftDate(selectedDate, 0).toLocaleDateString(milogLocale, { dateStyle: 'full' });
-  document.querySelector('#desk-date').textContent = date + ' · ' + new Date().toLocaleTimeString(milogLocale, { hour: '2-digit', minute: '2-digit' });
+  const clock = document.querySelector('#desk-date');
+  const day = document.createElement('span');
+  day.textContent = date;
+  const time = document.createElement('time');
+  time.textContent = new Date().toLocaleTimeString(milogLocale, { hour: '2-digit', minute: '2-digit' });
+  clock.replaceChildren(day, time);
   refreshInlineDates();
 }
 setInterval(updateDesktopClock, 1000);
@@ -88,7 +93,7 @@ desktopQuery.addEventListener('change', closeWorkPanels);
 mobileLayout.addEventListener('change', closeWorkPanels);
 function closeWorkPanels() {
   closeEntryDetail();
-  for (const dialog of [calendar, detail, compose, quickManager, webAccount, drawer, timelineSettings]) dialog.close();
+  for (const dialog of [calendar, detail, compose, quickManager, webAccount, drawer, timelineSettings, document.querySelector('#special-days')]) dialog.close();
 }
 
 for (const button of document.querySelectorAll('[data-click]')) {
@@ -305,4 +310,5 @@ inline.addEventListener('submit', async (event) => {
     await showTimeline(session);
   }
 });
+
 

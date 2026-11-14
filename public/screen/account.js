@@ -90,6 +90,13 @@ const timelineActivity = document.querySelector('#timeline-activity');
 const webAccount = document.querySelector('#web-account');
 const sortToggle = document.querySelector('#timeline-sort');
 const mobileLayout = document.querySelector('#mobile-layout');
+const direction = document.querySelector('#timeline-direction');
+direction.value = localStorage.getItem('milog-direction') || 'newest';
+direction.addEventListener('change', () => {
+  localStorage.setItem('milog-direction', direction.value);
+  if (accountLogs) renderLogs(accountLogs);
+});
+const dayDirection = () => direction.value === 'oldest' ? -1 : 1;
 const profileTheme = document.querySelector('#profile-theme');
 mobileLayout.checked = localStorage.getItem('milog-mobile-layout') === 'true';
 function updateLayout() {
@@ -106,7 +113,12 @@ document.querySelector('#settings-mobile-view').addEventListener('click', () => 
   mobileLayout.click();
 });
 profileTheme.value = localStorage.getItem('milog-web-theme') === 'dark' ? 'dark' : 'light';
+document.querySelector('#profile-theme-toggle').addEventListener('click', () => {
+  profileTheme.value = profileTheme.value === 'dark' ? 'light' : 'dark';
+  profileTheme.dispatchEvent(new Event('change'));
+});
 function updateTheme() {
+  document.querySelector('#profile-theme-toggle').setAttribute('aria-pressed', String(profileTheme.value === 'dark'));
   phone.classList.toggle('theme-dark', profileTheme.value === 'dark');
   document.documentElement.classList.toggle('milog-dark', profileTheme.value === 'dark');
 }
@@ -234,6 +246,18 @@ document.querySelector('#detail-delete').addEventListener('click', async (event)
   if (calendar.open) renderCalendar();
 });
 
+document.querySelector('#web-password-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const input = document.querySelector('#web-new-password');
+  const button = event.currentTarget.querySelector('[type=submit]');
+  button.disabled = true;
+  try {
+    const { error } = await client.auth.updateUser({ password: input.value });
+    document.querySelector('#web-password-status').textContent = error ? error.message : 'Password changed.';
+    if (!error) input.value = '';
+  } finally { button.disabled = false; }
+});
+
 function populateProfile(user) {
   const name = user.user_metadata?.display_name || user.email?.split('@')[0] || 'Milog';
   if (desktopMode()) {
@@ -243,8 +267,9 @@ function populateProfile(user) {
   document.querySelector('#profile-name').textContent = name;
   document.querySelector('#profile-email').textContent = '@' + (user.user_metadata?.username || user.email?.split('@')[0] || 'milog');
   document.querySelector('#web-account-name').textContent = name;
+  document.querySelector('#web-account-username').textContent = document.querySelector('#profile-email').textContent;
   document.querySelector('#web-account-email').textContent = user.email ?? '';
-  for (const target of [avatar, document.querySelector('#drawer-avatar')]) {
+  for (const target of [avatar, document.querySelector('#drawer-avatar'), document.querySelector('#desk-profile')]) {
     target.textContent = name.slice(0, 1).toLocaleUpperCase('tr');
     const url = user.user_metadata?.avatar_url;
     if (typeof url === 'string' && url.startsWith('https://')) {
@@ -337,6 +362,7 @@ function makeAgendaDay(date, scheduled) {
   day.className = 'day';
   day.dataset.date = dateKey(date);
   day.append(dateHeading(date));
+  appendCelebrations(day, date);
   const slots = document.createElement('div');
   day.append(slots);
   const night = document.createElement('details');
@@ -409,6 +435,7 @@ function makeAgendaDay(date, scheduled) {
       const body = document.createElement('span');
       body.textContent = desktopMode() && localStorage.getItem(entryFlag(log, 'hidden')) ? 'Hidden entry' : [log.emoji, log.body].filter(Boolean).join(' ');
       button.append(time, body);
+      if (!localStorage.getItem(entryFlag(log, 'hidden'))) appendPolaroid(button, log);
       button.addEventListener('click', () => openLogDetail(log));
       group.append(button);
     }
@@ -426,7 +453,7 @@ function jumpToAgendaDay(date) {
   let page = timeline.querySelector('[data-date="' + selectedDate + '"]');
   if (!page) {
     timeline.replaceChildren(...Array.from({ length: 17 }, (_, index) =>
-      agendaPage(shiftDate(selectedDate, 8 - index))));
+      agendaPage(shiftDate(selectedDate, (8 - index) * dayDirection()))));
     page = timeline.children[8];
   }
   timeline.scrollTop = page.offsetTop;
@@ -516,12 +543,12 @@ timeline.addEventListener('scroll', () => {
   let last = timeline.lastElementChild;
   if (timeline.scrollTop < timeline.clientHeight) {
     const previousTop = first.offsetTop;
-    const pages = Array.from({ length: 7 }, (_, index) => agendaPage(shiftDate(first.dataset.date, 7 - index)));
+    const pages = Array.from({ length: 7 }, (_, index) => agendaPage(shiftDate(first.dataset.date, (7 - index) * dayDirection())));
     timeline.prepend(...pages);
     timeline.scrollTop += first.offsetTop - previousTop;
   }
   if (timeline.scrollHeight - timeline.scrollTop - timeline.clientHeight < timeline.clientHeight) {
-    timeline.append(...Array.from({ length: 7 }, (_, index) => agendaPage(shiftDate(last.dataset.date, -index - 1))));
+    timeline.append(...Array.from({ length: 7 }, (_, index) => agendaPage(shiftDate(last.dataset.date, (-index - 1) * dayDirection()))));
   }
   const y = timeline.scrollTop + 12;
   const current = [...timeline.children].findLast((page) => page.offsetTop <= y);
@@ -544,7 +571,7 @@ function renderLogs(logs) {
   rail.hidden = true;
   if (!logs.length && !desktopMode()) timeline.textContent = 'No entries yet.';
   const days = new Map();
-  for (const log of logs) {
+  for (const log of (desktopMode() && dayDirection() < 0 ? [...logs].reverse() : logs)) {
     const date = new Date(log.created_at);
     const key = date.toLocaleDateString(milogLocale);
     if (!days.has(key)) {
@@ -552,6 +579,7 @@ function renderLogs(logs) {
       day.className = 'day';
       day.dataset.logDate = dateKey(date);
       day.append(dateHeading(date));
+  appendCelebrations(day, date);
       timeline.append(day);
       days.set(key, day);
     }
@@ -578,6 +606,7 @@ function renderLogs(logs) {
     body.textContent = desktopMode() && localStorage.getItem(entryFlag(log, 'hidden')) ? 'Hidden entry' : [log.emoji, log.body].filter(Boolean).join(' ');
     if (desktopMode() && localStorage.getItem(entryFlag(log, 'highlight'))) entry.classList.add('entry-highlight');
     record.append(body);
+    if (!localStorage.getItem(entryFlag(log, 'hidden'))) appendPolaroid(record, log);
     record.addEventListener('click', () => { if (!desktopMode()) openLogDetail(log); });
     record.addEventListener('dblclick', () => { if (desktopMode()) openLogDetail(log); });
     entry.append(header, record);
@@ -588,7 +617,8 @@ function renderLogs(logs) {
     day.className = 'day desk-empty-day';
     day.dataset.logDate = selectedDate;
     day.append(dateHeading(shiftDate(selectedDate, 0)));
-    const following = [...timeline.children].find((page) => page.dataset.logDate < selectedDate);
+    appendCelebrations(day, shiftDate(selectedDate, 0));
+    const following = [...timeline.children].find((page) => page.dataset.logDate.localeCompare(selectedDate) * dayDirection() < 0);
     timeline.insertBefore(day, following ?? null);
     timeline.scrollTop = day.offsetTop;
   } else if (desktopMode()) {
@@ -712,6 +742,7 @@ function renderCalendarRecords() {
     const body = document.createElement('span');
     body.textContent = log.body;
     button.append(time, body);
+      if (!localStorage.getItem(entryFlag(log, 'hidden'))) appendPolaroid(button, log);
     button.addEventListener('click', () => {
       if (desktopMode()) {
         calendar.close();
@@ -846,6 +877,7 @@ client.auth.onAuthStateChange((event, session) => {
 document.querySelector('#auth-fields').disabled = false;
 modeButton.disabled = false;
 message.textContent = '';
+
 
 
 

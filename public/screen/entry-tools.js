@@ -66,6 +66,48 @@ function setupEntryTools(form, textarea, onChange) {
         input.value = state[key];
         const done = document.createElement('button');
         done.textContent = 'Done';
+        if (key === 'location') {
+          const cities = document.querySelector('#sky-city').cloneNode(true);
+          cities.removeAttribute('id');
+          cities.prepend(new Option(milogLanguage === 'tr' ? 'Şehir seç' : 'Choose a city', '', true, true));
+          cities.addEventListener('change', () => {
+            if (cities.value) input.value = cities.selectedOptions[0].textContent;
+          });
+          pickerForm.append(cities);
+        } else {
+          const segments = document.createElement('nav');
+          const grid = document.createElement('div');
+          segments.className = 'emoji-segments';
+          grid.className = 'emoji-grid';
+          const categories = Object.entries(window.MilogEmoji ?? {});
+          const labels = { Tümü: 'All', Günlük: 'Daily', Aktivite: 'Activities', Duygu: 'Feelings', Yerler: 'Places' };
+          const render = (items) => {
+            grid.replaceChildren(...items.map((emoji) => {
+              const choice = document.createElement('button');
+              choice.type = 'button';
+              choice.textContent = emoji;
+              choice.addEventListener('click', () => {
+                input.value = emoji;
+                pickerForm.requestSubmit();
+              });
+              return choice;
+            }));
+          };
+          for (const [category, items] of [...categories].sort(([a], [b]) => Number(b === 'Tümü') - Number(a === 'Tümü'))) {
+            const tab = document.createElement('button');
+            tab.type = 'button';
+            tab.textContent = milogLanguage === 'tr' ? category : labels[category] ?? category;
+            tab.setAttribute('aria-pressed', String(category === 'Tümü'));
+            tab.addEventListener('click', () => {
+              segments.querySelector('[aria-pressed=true]')?.setAttribute('aria-pressed', 'false');
+              tab.setAttribute('aria-pressed', 'true');
+              render(items);
+            });
+            segments.append(tab);
+          }
+          render(window.MilogEmoji?.Tümü ?? []);
+          pickerForm.append(segments, grid);
+        }
         pickerForm.append(input, done);
         dialog.append(pickerForm);
         document.body.append(dialog);

@@ -3,20 +3,22 @@
 <head><meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>My Milog</title>
+<title>Milog</title>
 <link rel="stylesheet" href="screen/timeline.css?v=eab09429730e">
 <script src="screen/timeline.js?v=af426774d2e9" defer></script>
-<link rel="stylesheet" href="screen/account.css?v=726ac7b5566b">
+<link rel="stylesheet" href="screen/account.css?v=c5e859496a1d">
 <script src="screen/supabase.js?v=ec004176d101" defer></script>
 <script src="screen/config.js?v=ead7375de480" defer></script>
 <script src="screen/sky.js?v=9553175b580d" defer></script>
 <script src="screen/locale.js?v=0ef16ffcde68" defer></script>
-<script src="screen/account.js?v=3cf3f12858d6" defer></script>
+<script src="screen/account.js?v=ab9f10e35404" defer></script>
 <script src="screen/compose.js?v=fb1d7127a136" defer></script>
-<script src="screen/quick.js?v=b312bb506f55" defer></script>
-<script src="screen/entry-tools.js?v=50f9f474961f" defer></script>
-<script src="screen/desktop.js?v=d4ff1502039c" defer></script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap"><link rel="icon" type="image/svg+xml" href="assets/milog-logo.svg"></head>
+<script src="screen/quick.js?v=3ffd1fde649b" defer></script>
+<script src="screen/emoji.js?v=5438b9205343" defer></script>
+<script src="screen/entry-tools.js?v=504c47c4e957" defer></script>
+<script src="screen/desktop.js?v=bc9b631ab4cb" defer></script>
+<script src="screen/special.js?v=277a2aa78018" defer></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap"><link rel="icon" type="image/svg+xml" href="assets/milog-logo.svg"></head>
 <body>
 <main class="phone" aria-label="Milog Timeline">
   <aside class="desktop-sidebar" hidden aria-label="Milog menüsü">
@@ -27,9 +29,10 @@
     <button type="button" data-click="log-view">▧ <span>Journal</span></button>
     <button type="button" data-click="agenda-view">▤ <span>Agenda</span></button>
     <button type="button" data-click="calendar-view">▦ <span>Calendar</span></button>
+    <button type="button" data-special-days>✧ <span>Special days</span></button>
   </nav>
   <section class="desk-quick"><h2 id="desk-quick-title">Quick logs</h2><button type="button" id="desk-quick-back" hidden>‹ Back</button><div id="desk-shortcuts"></div><button type="button" data-click="quick-logs">All quick logs <span aria-hidden="true">›</span></button></section>
-  <footer><button type="button" data-click="profile-toggle">Profil</button><button type="button" data-click="settings-toggle">Settings</button></footer>
+  <footer><button type="button" data-click="profile-toggle" id="desk-profile" aria-label="Profile"></button><button type="button" data-click="settings-toggle">Settings</button></footer>
 </aside>
 <section class="desktop-heading" hidden aria-label="Çalışma alanı">
   <nav class="desk-tabs" aria-label="Görünümler"><button type="button" data-click="log-view"><span>Journal</span></button><button type="button" data-click="agenda-view"><span>Agenda</span></button></nav>
@@ -78,13 +81,24 @@
     <button id="profile-account" type="button"><span aria-hidden="true">⚙</span> My account <b>›</b></button>
     <label>Language<select id="profile-language" aria-label="Language"><option value="en">English</option><option value="tr">Türkçe</option></select></label>
     <label>Location<select id="sky-city" aria-label="Location"></select></label>
-    <label>Theme<select id="profile-theme" aria-label="Theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
-    <button type="button" disabled><span aria-hidden="true">✧</span> Special days <b>›</b></button>
+    <label>Theme<button type="button" id="profile-theme-toggle" aria-label="Dark theme" aria-pressed="false"><span>☀</span><span>☾</span></button><select id="profile-theme" hidden aria-label="Theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+    <button type="button" data-special-days><span aria-hidden="true">✧</span> Special days <b>›</b></button>
     <button type="button" disabled><span aria-hidden="true">✧</span> Highlights <b>›</b></button>
   </div>
   <button id="web-signout" type="button">⇥ &nbsp; Sign out</button>
 </dialog>
-<dialog id="web-account" class="full-screen"><form method="dialog" class="screen-header"><button type="button" id="web-account-back" aria-label="Back">‹</button><h2>My account</h2><button aria-label="Close">×</button></form><div class="web-account-content"><strong id="web-account-name"></strong><p id="web-account-email"></p></div></dialog>
+<dialog id="web-account" class="full-screen"><form method="dialog" class="screen-header"><button type="button" id="web-account-back" aria-label="Back">‹</button><h2>My account</h2><button aria-label="Close">×</button></form><div class="web-account-content"><strong id="web-account-name"></strong><dl><dt>Username</dt><dd id="web-account-username"></dd><dt>Email</dt><dd id="web-account-email"></dd></dl><form id="web-password-form"><label>New password <input type="password" id="web-new-password" autocomplete="new-password" minlength="8" required></label><button type="submit">Change password</button><p id="web-password-status" role="status"></p></form></div></dialog>
+<dialog id="special-days" class="full-screen">
+  <form method="dialog" class="screen-header"><h2>Special days</h2><button aria-label="Close">×</button></form>
+  <form id="special-days-form">
+    <label>Name<input name="person" maxlength="80" required></label>
+    <label>Occasion<select name="occasion"><option value="birthday">Birthday</option><option value="anniversary">Anniversary</option></select></label>
+    <div class="special-date"><label>Day<input name="day" type="number" min="1" max="31" required></label><label>Month<input name="month" type="number" min="1" max="12" required></label><label>Year (optional)<input name="year" type="number" min="1" max="9999"></label></div>
+    <button type="submit">Add special day</button>
+    <p id="special-days-status" role="status"></p>
+  </form>
+  <ul id="special-days-list"></ul>
+</dialog>
 <dialog id="timeline-menu" aria-label="Timeline menüsü">
   <button type="button" id="timeline-settings-open"></button><button type="button" id="timeline-activity-open">Recent activity</button>
   <label class="desktop-layout-toggle"><input id="mobile-layout" type="checkbox"> Mobile view</label>
@@ -92,6 +106,7 @@
 <dialog id="timeline-settings" class="bottom-sheet">
   <form method="dialog" class="screen-header"><h2 id="timeline-settings-title"></h2><button aria-label="Close">×</button></form>
   <button id="settings-mobile-view" type="button">Switch to mobile view</button>
+  <label>Scroll order <select id="timeline-direction"><option value="newest">Newer days above</option><option value="oldest">Older days above</option></select></label>
   <label id="timeline-sort-row"><input id="timeline-sort" type="checkbox"> Geç saatler üstte</label>
 </dialog>
 <dialog id="timeline-activity" class="bottom-sheet"><form method="dialog" class="screen-header"><h2>Recent activity</h2><button aria-label="Close">×</button></form><div id="web-activity-list"></div></dialog>

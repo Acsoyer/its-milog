@@ -13,13 +13,24 @@
     <button id="profile-account" type="button"><span aria-hidden="true">⚙</span> My account <b>›</b></button>
     <label>Language<select id="profile-language" aria-label="Language"><option value="en">English</option><option value="tr">Türkçe</option></select></label>
     <label>Location<select id="sky-city" aria-label="Location"></select></label>
-    <label>Theme<select id="profile-theme" aria-label="Theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
-    <button type="button" disabled><span aria-hidden="true">✧</span> Special days <b>›</b></button>
+    <label>Theme<button type="button" id="profile-theme-toggle" aria-label="Dark theme" aria-pressed="false"><span>☀</span><span>☾</span></button><select id="profile-theme" hidden aria-label="Theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+    <button type="button" data-special-days><span aria-hidden="true">✧</span> Special days <b>›</b></button>
     <button type="button" disabled><span aria-hidden="true">✧</span> Highlights <b>›</b></button>
   </div>
   <button id="web-signout" type="button">⇥ &nbsp; Sign out</button>
 </dialog>
-<dialog id="web-account" class="full-screen"><form method="dialog" class="screen-header"><button type="button" id="web-account-back" aria-label="Back">‹</button><h2>My account</h2><button aria-label="Close">×</button></form><div class="web-account-content"><strong id="web-account-name"></strong><p id="web-account-email"></p></div></dialog>
+<dialog id="web-account" class="full-screen"><form method="dialog" class="screen-header"><button type="button" id="web-account-back" aria-label="Back">‹</button><h2>My account</h2><button aria-label="Close">×</button></form><div class="web-account-content"><strong id="web-account-name"></strong><dl><dt>Username</dt><dd id="web-account-username"></dd><dt>Email</dt><dd id="web-account-email"></dd></dl><form id="web-password-form"><label>New password <input type="password" id="web-new-password" autocomplete="new-password" minlength="8" required></label><button type="submit">Change password</button><p id="web-password-status" role="status"></p></form></div></dialog>
+<dialog id="special-days" class="full-screen">
+  <form method="dialog" class="screen-header"><h2>Special days</h2><button aria-label="Close">×</button></form>
+  <form id="special-days-form">
+    <label>Name<input name="person" maxlength="80" required></label>
+    <label>Occasion<select name="occasion"><option value="birthday">Birthday</option><option value="anniversary">Anniversary</option></select></label>
+    <div class="special-date"><label>Day<input name="day" type="number" min="1" max="31" required></label><label>Month<input name="month" type="number" min="1" max="12" required></label><label>Year (optional)<input name="year" type="number" min="1" max="9999"></label></div>
+    <button type="submit">Add special day</button>
+    <p id="special-days-status" role="status"></p>
+  </form>
+  <ul id="special-days-list"></ul>
+</dialog>
 <dialog id="timeline-menu" aria-label="Timeline menüsü">
   <button type="button" id="timeline-settings-open"></button><button type="button" id="timeline-activity-open">Recent activity</button>
   <label class="desktop-layout-toggle"><input id="mobile-layout" type="checkbox"> Mobile view</label>
@@ -27,6 +38,7 @@
 <dialog id="timeline-settings" class="bottom-sheet">
   <form method="dialog" class="screen-header"><h2 id="timeline-settings-title"></h2><button aria-label="Close">×</button></form>
   <button id="settings-mobile-view" type="button">Switch to mobile view</button>
+  <label>Scroll order <select id="timeline-direction"><option value="newest">Newer days above</option><option value="oldest">Older days above</option></select></label>
   <label id="timeline-sort-row"><input id="timeline-sort" type="checkbox"> Geç saatler üstte</label>
 </dialog>
 <dialog id="timeline-activity" class="bottom-sheet"><form method="dialog" class="screen-header"><h2>Recent activity</h2><button aria-label="Close">×</button></form><div id="web-activity-list"></div></dialog>

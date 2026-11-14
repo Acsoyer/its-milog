@@ -17,7 +17,7 @@ if ($landingHtml -notmatch '</nav>' -or $landingHtml -match '>My Milog<') {
 
 New-Item -ItemType Directory -Force $landing, $screen, "$app/assets/fonts" | Out-Null
 Copy-Item -Path "$LandingSource/*" -Destination $landing -Recurse -Force
-$landingHtml = $landingHtml.Replace('</nav>', '<a class="my-milog" href="https://my.milog.app/">My Milog</a></nav>')
+$landingHtml = $landingHtml.Replace('</nav>', '<a class="my-milog" href="https://its.milog.app/">My Milog</a></nav>')
 Set-Content -Encoding utf8 "$landing/index.html" $landingHtml
 Add-Content "$landing/css/style.css" '
 .nav { flex-wrap: wrap; }
@@ -27,7 +27,7 @@ Add-Content "$landing/css/style.css" '
 }
 New-Item -ItemType Directory -Force $screen, "$app/assets/fonts" | Out-Null
 
-Copy-Item "$root/preview/timeline.css", "$root/preview/timeline.js", "$PSScriptRoot/account.css", "$PSScriptRoot/account.js", "$PSScriptRoot/compose.js", "$PSScriptRoot/quick.js", "$PSScriptRoot/desktop.js", "$PSScriptRoot/entry-tools.js", "$PSScriptRoot/locale.js" $screen -Force
+Copy-Item "$root/preview/timeline.css", "$root/preview/timeline.js", "$PSScriptRoot/account.css", "$PSScriptRoot/account.js", "$PSScriptRoot/compose.js", "$PSScriptRoot/quick.js", "$PSScriptRoot/desktop.js", "$PSScriptRoot/entry-tools.js", "$PSScriptRoot/locale.js", "$PSScriptRoot/special.js" $screen -Force
 Copy-Item "$root/node_modules/@supabase/supabase-js/dist/umd/supabase.js" $screen -Force
 $settings = if (Test-Path "$root/.env") { ConvertFrom-StringData (Get-Content "$root/.env" -Raw) } else { @{} }
 $url = ($env:EXPO_PUBLIC_SUPABASE_URL ?? $settings.EXPO_PUBLIC_SUPABASE_URL ?? '').Trim('"', "'")
@@ -47,8 +47,15 @@ $skyJs = $skyModule | node -e "const fs = require('fs'); const ts = require('typ
 if ($LASTEXITCODE) { throw 'Sky module compilation failed.' }
 Set-Content -Encoding utf8 "$screen/sky.js" ("(() => {`n" + ($skyJs -join "`n") + "`n})();")
 
+$icons = Get-Content "$root/src/components/IconPickerModal.tsx" -Raw
+$emojiStart = $icons.IndexOf('const emojiCategories:')
+$emojiEnd = $icons.IndexOf("emojiCategories.Tümü =", $emojiStart)
+if ($emojiStart -lt 0 -or $emojiEnd -lt 0) { throw 'Mobile emoji catalog not found.' }
+$emojiEnd = $icons.IndexOf(";", $emojiEnd) + 1
+$emojiData = $icons.Substring($emojiStart, $emojiEnd - $emojiStart) + "`nwindow.MilogEmoji = emojiCategories;"
+$emojiData | node -e "const fs = require('fs'); const ts = require('typescript'); process.stdout.write(ts.transpile(fs.readFileSync(0, 'utf8')));" | Set-Content -Encoding utf8 "$screen/emoji.js"
 $html = Get-Content "$root/preview/index.html" -Raw
-$html = $html.Replace('Milog · Timeline Önizleme', 'My Milog')
+$html = $html.Replace('Milog · Timeline Önizleme', 'Milog')
 $html = $html.Replace('href="timeline.css"', 'href="screen/timeline.css"')
 $html = $html.Replace('src="timeline.js"', 'src="screen/timeline.js"')
 $accountScripts = @'
@@ -60,8 +67,10 @@ $accountScripts = @'
 <script src="screen/account.js" defer></script>
 <script src="screen/compose.js" defer></script>
 <script src="screen/quick.js" defer></script>
+<script src="screen/emoji.js" defer></script>
 <script src="screen/entry-tools.js" defer></script>
 <script src="screen/desktop.js" defer></script>
+<script src="screen/special.js" defer></script>
 </head>
 '@
 $html = $html.Replace('</head>', $accountScripts)
@@ -80,7 +89,7 @@ $html = $html.Replace('</main>', (Get-Content "$PSScriptRoot/account.html" -Raw)
 $html = $html.Replace('../assets/', 'assets/')
 $html = $html.Replace('<head>', '<head><meta name="referrer" content="no-referrer">')
 $html = $html.Replace('lang="tr"', 'lang="en"')
-$html = $html.Replace('</head>', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap"></head>')
+$html = $html.Replace('</head>', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap"></head>')
 $html = $html.Replace('</head>', '<link rel="icon" type="image/svg+xml" href="assets/milog-logo.svg"></head>')
 foreach ($asset in (Get-ChildItem "$screen" -File)) {
   $version = (Get-FileHash -LiteralPath $asset.FullName).Hash.Substring(0, 12).ToLowerInvariant()
@@ -104,6 +113,8 @@ if ($Release) {
   Compress-Archive -Path "$app/*" -DestinationPath $archive
   Write-Output "Created $archive"
 }
+
+
 
 
 
