@@ -33,7 +33,12 @@ function renderDesktopCalendarSelection() {
   for (const log of (accountLogs ?? []).filter((entry) => dateKey(new Date(entry.created_at)) === desktopCalendarDay)) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = timeFormat.format(new Date(log.created_at)) + ' · ' + log.body;
+    const summary = document.createElement('span');
+    summary.textContent = timeFormat.format(new Date(log.created_at)) + ' · ' + log.body;
+    const action = document.createElement('span');
+    action.className = 'calendar-go';
+    action.textContent = milogLanguage === 'tr' ? 'Kayda git' : 'Go to entry';
+    button.append(summary, action);
     const show = () => {
       desktopMarkedLog = log;
       selectedDate = desktopCalendarDay;
@@ -41,6 +46,7 @@ function renderDesktopCalendarSelection() {
     };
     button.addEventListener('dblclick', show);
     button.addEventListener('keydown', (event) => { if (event.key === 'Enter') show(); });
+    action.addEventListener('click', show);
     list.append(button);
   }
   if (!list.childElementCount) list.textContent = 'No entries on this day.';
@@ -78,7 +84,8 @@ function renderDesktopSearch() {
 }
 document.querySelector('#desk-search').addEventListener('input', renderDesktopSearch);
 function updateDesktopClock() {
-  const date = shiftDate(selectedDate, 0).toLocaleDateString(milogLocale, { dateStyle: 'full' });
+  const parts = new Intl.DateTimeFormat(milogLocale, { day: 'numeric', month: 'short', year: '2-digit' }).formatToParts(shiftDate(selectedDate, 0));
+  const date = ['day', 'month', 'year'].map((type) => parts.find((part) => part.type === type)?.value).join(' ');
   const clock = document.querySelector('#desk-date');
   const day = document.createElement('span');
   day.textContent = date;
@@ -149,15 +156,29 @@ function updateDesktop() {
   const year = date.getFullYear();
   const index = date.getMonth();
   const offset = (new Date(year, index, 1).getDay() + 6) % 7;
+  const counts = new Map();
+  for (const log of accountLogs ?? []) {
+    const key = dateKey(new Date(log.created_at));
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
   for (let i = 0; i < 42; i += 1) {
     const day = new Date(year, index, i - offset + 1);
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = day.getDate();
-    button.setAttribute('aria-label', day.toLocaleDateString(milogLocale, { dateStyle: 'full' }));
+    const count = counts.get(dateKey(day)) ?? 0;
+    const dateLabel = day.toLocaleDateString(milogLocale, { dateStyle: 'full' });
+    button.setAttribute('aria-label', count ? dateLabel + (milogLanguage === 'tr' ? ', kayıt: ' : ', entries: ') + count : dateLabel);
     button.setAttribute('aria-pressed', String(dateKey(day) === (desktopCalendarDay ?? selectedDate)));
     button.classList.toggle('other-month', day.getMonth() !== index);
-    button.classList.toggle('has-records', (accountLogs ?? []).some((log) => dateKey(new Date(log.created_at)) === dateKey(day)));
+    if (count) {
+      const dots = document.createElement('span');
+      dots.className = 'calendar-dots';
+      dots.setAttribute('aria-hidden', 'true');
+      const density = count >= 5 ? 3 : count >= 2 ? 2 : 1;
+      for (let dot = 0; dot < density; dot++) dots.append(document.createElement('i'));
+      button.append(dots);
+    }
     button.addEventListener('click', () => {
       desktopCalendarDay = dateKey(day);
       updateDesktop();

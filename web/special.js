@@ -2,12 +2,38 @@ function openSpecialDays() {
   const dialog = document.querySelector('#special-days');
   renderSpecialDays();
   openWorkPanel(dialog);
+  void refreshPersonalListsWeb();
 }
 
 function specialDays() {
   const days = activeSession?.user.user_metadata?.milog_special_days;
   return Array.isArray(days) ? days : [];
 }
+
+function savedPlacesFromUser(user) {
+  const places = user?.user_metadata?.milog_saved_places;
+  return Array.isArray(places) ? places.filter((place) => typeof place === 'string') : [];
+}
+
+async function refreshPersonalListsWeb() {
+  const userId = activeSession?.user.id;
+  if (!userId) return null;
+  try {
+    const { data, error } = await client.auth.getUser();
+    if (error || data.user.id !== userId || activeSession?.user.id !== userId) return null;
+    const changed = JSON.stringify(specialDays()) !== JSON.stringify(data.user.user_metadata?.milog_special_days ?? []);
+    activeSession.user = data.user;
+    if (changed) {
+      renderSpecialDays();
+      if (accountLogs) renderLogs(accountLogs);
+    }
+    return data.user;
+  } catch { return null; }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') void refreshPersonalListsWeb();
+});
 
 function specialDayTitle(day, year) {
   const label = day.type === 'anniversary' ? (milogLanguage === 'tr' ? 'Yıl dönümü' : 'Anniversary') : (milogLanguage === 'tr' ? 'Doğum günü' : 'Birthday');
@@ -25,10 +51,14 @@ function appendCelebrations(page, date) {
   }
 }
 
-async function saveSpecialDaysWeb(days) {
+async function saveSpecialDaysWeb(change) {
+  if (!await refreshPersonalListsWeb()) {
+    document.querySelector('#special-days-status').textContent = 'Could not connect. Try again.';
+    return false;
+  }
   const session = activeSession;
   if (!session) return false;
-  const { data, error } = await client.auth.updateUser({ data: { milog_special_days: days } });
+  const { data, error } = await client.auth.updateUser({ data: { milog_special_days: change(specialDays()) } });
   if (activeSession?.user.id !== session.user.id) return false;
   document.querySelector('#special-days-status').textContent = error ? 'Could not save special days.' : '';
   if (error) return false;
@@ -51,7 +81,7 @@ function renderSpecialDays() {
     remove.addEventListener('click', async () => {
       if (!confirm('Remove this special day?')) return;
       remove.disabled = true;
-      try { await saveSpecialDaysWeb(specialDays().filter((entry) => entry.id !== day.id)); }
+      try { await saveSpecialDaysWeb((days) => days.filter((entry) => entry.id !== day.id)); }
       finally { remove.disabled = false; }
     });
     row.append(remove);
@@ -73,7 +103,7 @@ document.querySelector('#special-days-form').addEventListener('submit', async (e
   const save = form.querySelector('[type=submit]');
   save.disabled = true;
   try {
-    if (await saveSpecialDaysWeb([...specialDays(), { id: crypto.randomUUID(), name, type: form.elements.occasion.value, month, day, year: Number(form.elements.year.value) || undefined }])) form.reset();
+    if (await saveSpecialDaysWeb((days) => [...days, { id: crypto.randomUUID(), name, type: form.elements.occasion.value, month, day, year: Number(form.elements.year.value) || undefined }])) form.reset();
   } finally { save.disabled = false; }
 });
 

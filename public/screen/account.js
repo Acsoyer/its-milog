@@ -637,6 +637,10 @@ function renderLogs(logs) {
     day.dataset.logDate = selectedDate;
     appendDayHeader(day, shiftDate(selectedDate, 0));
     appendCelebrations(day, shiftDate(selectedDate, 0));
+    const empty = document.createElement('p');
+    empty.className = 'journal-empty';
+    empty.textContent = '–';
+    day.append(empty);
     const following = [...timeline.children].find((page) => page.dataset.logDate.localeCompare(selectedDate) * dayDirection() < 0);
     timeline.insertBefore(day, following ?? null);
     timeline.scrollTop = day.offsetTop;
@@ -652,6 +656,7 @@ async function showTimeline(session) {
   const version = ++accountVersion;
   const changedUser = activeSession?.user.id !== session.user.id;
   activeSession = session;
+  void refreshPersonalListsWeb();
   if (changedUser) void window.refreshMilogShortcuts(session);
   populateProfile(session.user);
   gate.hidden = true;

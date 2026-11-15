@@ -104,7 +104,17 @@ function setupEntryTools(form, textarea, onChange) {
         }
         const heading = document.createElement('h2');
         heading.textContent = key === 'location' ? (milogLanguage === 'tr' ? 'Konum ekle' : 'Add location') : (milogLanguage === 'tr' ? 'Emoji ekle' : 'Add emoji');
-        pickerForm.prepend(heading);
+        if (key === 'location') {
+          const header = document.createElement('header');
+          header.className = 'location-heading';
+          const close = document.createElement('button');
+          close.type = 'button';
+          close.textContent = '×';
+          close.setAttribute('aria-label', milogLanguage === 'tr' ? 'Kapat' : 'Close');
+          close.addEventListener('click', () => dialog.close());
+          header.append(heading, close);
+          pickerForm.prepend(header);
+        } else pickerForm.prepend(heading);
         if (key === 'emoji') {
           dialog.classList.add('entry-emoji-picker');
           input.type = 'hidden';
@@ -112,7 +122,7 @@ function setupEntryTools(form, textarea, onChange) {
           done.addEventListener('click', () => dialog.close());
           pickerForm.append(input);
         }
-        pickerForm.append(done);
+        if (key === 'emoji') pickerForm.append(done);
         dialog.append(pickerForm);
         document.body.append(dialog);
         dialog.addEventListener('close', () => dialog.remove(), { once: true });
@@ -171,8 +181,12 @@ function clearEntryTools(form) {
 function locationOptions(form, input) {
   const tr = milogLanguage === 'tr';
   const key = 'milog-saved-places:' + activeSession?.user.id;
-  let saved;
-  try { saved = JSON.parse(localStorage.getItem(key) || '[]'); } catch { saved = []; }
+  let local = [];
+  try {
+    const cached = JSON.parse(localStorage.getItem(key) || '[]');
+    if (Array.isArray(cached)) local = cached;
+  } catch {}
+  let saved = [...new Set([...savedPlacesFromUser(activeSession?.user), ...local])];
   const list = document.createElement('div');
   list.className = 'saved-locations';
   const status = document.createElement('p');
@@ -189,9 +203,14 @@ function locationOptions(form, input) {
     form.requestSubmit();
   })));
   draw();
+  void refreshPersonalListsWeb().then((user) => {
+    if (!user || !form.isConnected) return;
+    saved = [...new Set([...savedPlacesFromUser(user), ...local])];
+    draw();
+  });
   const actions = document.createElement('div');
   actions.className = 'location-actions';
-  const current = makeButton(tr ? 'Anlık konum ekle' : 'Use current location', async () => {
+  const current = makeButton(tr ? 'Anlık' : 'Current', async () => {
     current.disabled = true;
     status.textContent = tr ? 'Konum belirleniyor…' : 'Finding location…';
     try {
@@ -204,21 +223,35 @@ function locationOptions(form, input) {
       input.value = [...new Set([place.city, place.locality].filter(Boolean))].join(', ');
       if (!input.value) throw new Error('No locality');
       status.textContent = '';
-      input.focus();
+      form.requestSubmit();
     } catch {
       status.textContent = tr ? 'Konum belirlenemedi. Konumu elle ekleyin.' : 'Could not determine your location. Enter it manually.';
     } finally { current.disabled = false; }
   });
   current.title = tr ? 'Koordinatlar yer adı için BigDataCloud’a gönderilir.' : 'Coordinates are sent to BigDataCloud to find a place name.';
-  actions.append(current, makeButton(tr ? 'Konum listesine ekle' : 'Add to saved locations', () => {
+  const add = makeButton(tr ? 'Ekle' : 'Add', async () => {
     const place = input.value.trim();
     if (!place) return input.focus();
-    if (!saved.includes(place)) {
-      saved = [...saved, place];
-      localStorage.setItem(key, JSON.stringify(saved));
-      draw();
+    add.disabled = true;
+    try {
+      const user = await refreshPersonalListsWeb();
+      if (!user || !form.isConnected) throw new Error('Account unavailable');
+      const updated = [...new Set([...savedPlacesFromUser(user), ...local, place])];
+      const { data, error } = await client.auth.updateUser({ data: { milog_saved_places: updated } });
+      if (error || activeSession?.user.id !== user.id) throw error ?? new Error('Account changed');
+      activeSession.user = data.user;
+      localStorage.removeItem(key);
+      if (form.isConnected) form.requestSubmit();
+    } catch {
+      status.textContent = tr ? 'Konum kaydedilemedi. Tekrar deneyin.' : 'Could not save the location. Try again.';
+    } finally {
+      add.disabled = false;
     }
-  }));
+  });
+  actions.append(current, add);
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') { event.preventDefault(); add.click(); }
+  });
   form.append(list, input, status, actions);
 }
 
