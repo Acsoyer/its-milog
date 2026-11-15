@@ -91,7 +91,7 @@ $html = $html.Replace('</main>', (Get-Content "$PSScriptRoot/account.html" -Raw)
 $html = $html.Replace('../assets/', 'assets/')
 $html = $html.Replace('<head>', '<head><meta name="referrer" content="no-referrer">')
 $html = $html.Replace('lang="tr"', 'lang="en"')
-$html = $html.Replace('</head>', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap"></head>')
+$html = $html.Replace('</head>', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap"></head>')
 $html = $html.Replace('</head>', '<link rel="icon" type="image/svg+xml" href="assets/milog-logo.svg"></head>')
 foreach ($asset in (Get-ChildItem "$screen" -File)) {
   $version = (Get-FileHash -LiteralPath $asset.FullName).Hash.Substring(0, 12).ToLowerInvariant()
@@ -115,6 +115,7 @@ if ($Release) {
   Compress-Archive -Path "$app/*" -DestinationPath $archive
   Write-Output "Created $archive"
 }
+
 
 
 

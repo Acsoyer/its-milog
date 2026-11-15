@@ -67,13 +67,7 @@ function setupEntryTools(form, textarea, onChange) {
         const done = document.createElement('button');
         done.textContent = 'Done';
         if (key === 'location') {
-          const cities = document.querySelector('#sky-city').cloneNode(true);
-          cities.removeAttribute('id');
-          cities.prepend(new Option(milogLanguage === 'tr' ? 'Şehir seç' : 'Choose a city', '', true, true));
-          cities.addEventListener('change', () => {
-            if (cities.value) input.value = cities.selectedOptions[0].textContent;
-          });
-          pickerForm.append(cities);
+          locationOptions(pickerForm, input);
         } else {
           const segments = document.createElement('nav');
           const grid = document.createElement('div');
@@ -108,12 +102,28 @@ function setupEntryTools(form, textarea, onChange) {
           render(window.MilogEmoji?.Tümü ?? []);
           pickerForm.append(segments, grid);
         }
-        pickerForm.append(input, done);
+        const heading = document.createElement('h2');
+        heading.textContent = key === 'location' ? (milogLanguage === 'tr' ? 'Konum ekle' : 'Add location') : (milogLanguage === 'tr' ? 'Emoji ekle' : 'Add emoji');
+        pickerForm.prepend(heading);
+        if (key === 'emoji') {
+          dialog.classList.add('entry-emoji-picker');
+          input.type = 'hidden';
+          done.type = 'button';
+          done.addEventListener('click', () => dialog.close());
+          pickerForm.append(input);
+        }
+        pickerForm.append(done);
         dialog.append(pickerForm);
         document.body.append(dialog);
         dialog.addEventListener('close', () => dialog.remove(), { once: true });
         pickerForm.addEventListener('submit', () => {
-          state[key] = input.value.trim();
+          if (key === 'emoji') {
+            const start = textarea.selectionStart;
+            const finish = textarea.selectionEnd;
+            if (input.value) textarea.setRangeText(input.value, start, finish, 'end');
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            queueMicrotask(() => textarea.focus());
+          } else state[key] = input.value.trim();
           draw();
           onChange();
         });
@@ -158,3 +168,57 @@ function hasEntryAttachments(form) {
 function clearEntryTools(form) {
   entryToolStates.get(form)?.clear();
 }
+function locationOptions(form, input) {
+  const tr = milogLanguage === 'tr';
+  const key = 'milog-saved-places:' + activeSession?.user.id;
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem(key) || '[]'); } catch { saved = []; }
+  const list = document.createElement('div');
+  list.className = 'saved-locations';
+  const status = document.createElement('p');
+  status.setAttribute('role', 'status');
+  const makeButton = (title, action) => {
+    const control = document.createElement('button');
+    control.type = 'button';
+    control.textContent = title;
+    control.addEventListener('click', action);
+    return control;
+  };
+  const draw = () => list.replaceChildren(...saved.map((place) => makeButton(place, () => {
+    input.value = place;
+    form.requestSubmit();
+  })));
+  draw();
+  const actions = document.createElement('div');
+  actions.className = 'location-actions';
+  const current = makeButton(tr ? 'Anlık konum ekle' : 'Use current location', async () => {
+    current.disabled = true;
+    status.textContent = tr ? 'Konum belirleniyor…' : 'Finding location…';
+    try {
+      const position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 }));
+      if (!form.isConnected) return;
+      const params = new URLSearchParams({ latitude: position.coords.latitude, longitude: position.coords.longitude, localityLanguage: milogLanguage });
+      const response = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?' + params, { signal: AbortSignal.timeout(8000) });
+      if (!response.ok) throw new Error('Geocoding failed');
+      const place = await response.json();
+      input.value = [...new Set([place.city, place.locality].filter(Boolean))].join(', ');
+      if (!input.value) throw new Error('No locality');
+      status.textContent = '';
+      input.focus();
+    } catch {
+      status.textContent = tr ? 'Konum belirlenemedi. Konumu elle ekleyin.' : 'Could not determine your location. Enter it manually.';
+    } finally { current.disabled = false; }
+  });
+  current.title = tr ? 'Koordinatlar yer adı için BigDataCloud’a gönderilir.' : 'Coordinates are sent to BigDataCloud to find a place name.';
+  actions.append(current, makeButton(tr ? 'Konum listesine ekle' : 'Add to saved locations', () => {
+    const place = input.value.trim();
+    if (!place) return input.focus();
+    if (!saved.includes(place)) {
+      saved = [...saved, place];
+      localStorage.setItem(key, JSON.stringify(saved));
+      draw();
+    }
+  }));
+  form.append(list, input, status, actions);
+}
+

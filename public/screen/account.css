@@ -698,3 +698,45 @@
   :root.milog-dark.milog-signed-in:not(.force-mobile) .timeline:not(.agenda-view) .entry { box-shadow: inset 0 -1px var(--rule); }
 }
 .entry-polaroid.photo-loading { visibility: hidden; }
+@media (min-width: 980px) and (hover: hover) and (pointer: fine) {
+  :root.milog-signed-in:not(.force-mobile):not(.milog-dark),
+  :root.milog-signed-in:not(.force-mobile):not(.milog-dark) .phone { background: #fff; }
+  :root.milog-signed-in:not(.force-mobile):not(.milog-dark) .phone :is(.desktop-sidebar, .desktop-context) { background: transparent; }
+  :root.milog-signed-in:not(.force-mobile):not(.milog-dark) .timeline .day { --day-paper: #fff; outline: 1px solid #ebeef0; }
+  :root.milog-signed-in:not(.force-mobile):not(.milog-dark) .timeline.agenda-view .day { --day-paper: #fafdff; }
+  :root.milog-signed-in:not(.force-mobile) .timeline .day-top {
+    position: sticky; top: 0; z-index: 2; background: var(--day-paper);
+    margin: -16px -18px 0; padding: 16px 18px 0; border-radius: 16px 16px 0 0;
+  }
+  :root.milog-signed-in:not(.force-mobile) .timeline .day-top .date { position: relative; top: auto; margin-bottom: 0; }
+}
+.agenda-hour time, .agenda-record time { font-family: Oswald, 'Arial Narrow', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: .035em; }
+.night-preview:empty, .agenda-night[open] + .night-preview { display: none; }
+#quick-list { gap: 10px; }
+#quick-list .drop-target, #quick-list .drop-target.drop-after { position: relative; box-shadow: none; }
+#quick-list .drop-target::after { content: ''; position: absolute; pointer-events: none; inset: -8px 6px auto; height: 4px; border-radius: 4px; background: #397db8; }
+#quick-list .drop-target.drop-after::after { top: auto; bottom: -8px; }
+.entry-tool-picker h2 { font-size: 17px; margin: 0 0 4px; }
+.entry-emoji-picker form { grid-template-rows: auto auto minmax(0,1fr) auto; height: min(400px, 68dvh); }
+.entry-emoji-picker .emoji-grid { max-height: none; align-content: start; }
+.emoji-grid button { font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+.saved-locations { max-height: 180px; overflow: auto; display: grid; gap: 4px; }
+.saved-locations button { text-align: left; background: transparent; color: inherit; border: 1px solid var(--rule); }
+.location-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.entry-tool-picker p:empty { display: none; }
+.entry-mode { position: relative; margin-right: auto; z-index: 5; }
+.entry-mode summary { cursor: pointer; font-weight: 700; padding: 7px 0; }
+.entry-mode div { position: absolute; top: 100%; left: 0; display: grid; min-width: 120px; gap: 3px; padding: 4px; border-radius: 8px; background: var(--canvas, white); box-shadow: 0 4px 12px #0002; }
+#desk-list-items { max-height: 115px; overflow: auto; }
+#desk-list-items label { display: flex; align-items: center; gap: 8px; }
+#desk-list-items input:not([type=checkbox]) { flex: 1; min-width: 0; border: 0; padding: 6px; background: transparent; }
+#desk-list-items input[type=checkbox], .entry-checklist button::before { appearance: none; border: 1px solid #7d91a7; border-radius: 50%; width: 16px; height: 16px; flex: none; }
+#desk-list-items input[type=checkbox]:checked { background: #315980; }
+#desk-list-items input[type=checkbox]:checked::after { content: '✓'; color: white; display: block; text-align: center; font-size: 11px; }
+.entry-checklist { margin: 0; padding: 0 8px; list-style: none; }
+.entry-checklist button { display: flex; gap: 8px; align-items: center; text-align: left; min-height: 28px; }
+.entry-checklist button::before { content: ''; display: grid; place-items: center; }
+.entry-checklist button[aria-pressed=true]::before { content: '✓'; background: #315980; color: #fff; }
+#desk-reminder-time { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+#desk-reminder-time input { font: inherit; border: 1px solid var(--rule); border-radius: 8px; padding: 4px; }
+:root.milog-dark .entry-mode div { background: #242d3a; }

@@ -130,7 +130,7 @@ function updateDesktop() {
   const date = desktopMonth ?? shiftDate(selectedDate, 0);
   updateDesktopClock();
   document.querySelector('#desk-inline').hidden = !activeSession;
-  document.querySelector('#desk-inline-title').textContent = agenda ? 'Plan an entry' : 'New entry';
+  document.querySelector('#desk-inline-title').textContent = inlineMode === 'list' ? 'Checklist' : inlineMode === 'reminder' ? 'Reminder' : agenda ? 'Plan an entry' : 'New entry';
   document.querySelector('#desk-inline-text').placeholder = agenda ? 'What are you planning?' : 'What’s happening?';
   for (const button of document.querySelectorAll('.desktop-sidebar nav [data-click], .desk-tabs [data-click]')) {
     const active = button.dataset.click === (agenda ? 'agenda-view' : 'log-view');
@@ -230,6 +230,60 @@ inline.querySelector('footer').prepend(inline.querySelector('.entry-tools'));
 inlineText.required = false;
 composeBody.required = false;
 let inlineDate;
+let inlineMode = 'entry';
+const checklistEditor = document.querySelector('#desk-list-items');
+const reminderEditor = document.querySelector('#desk-reminder-time');
+const reminderTime = reminderEditor.querySelector('input');
+function addChecklistItem(text = '') {
+  const row = document.createElement('label');
+  const check = document.createElement('input');
+  check.type = 'checkbox';
+  check.setAttribute('aria-label', 'Mark complete');
+  const input = document.createElement('input');
+  input.placeholder = 'List item';
+  input.value = text;
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addChecklistItem().focus();
+    } else if (event.key === 'Backspace' && !input.value && checklistEditor.children.length > 1) {
+      event.preventDefault();
+      (row.previousElementSibling ?? row.nextElementSibling).lastElementChild.focus();
+      row.remove();
+      refreshInlineDirty();
+    }
+  });
+  row.append(check, input);
+  checklistEditor.append(row);
+  return input;
+}
+function setInlineMode(mode) {
+  inlineMode = mode;
+  checklistEditor.hidden = mode !== 'list';
+  reminderEditor.hidden = mode !== 'reminder';
+  inlineText.hidden = mode === 'list';
+  reminderTime.required = mode === 'reminder';
+  if (mode === 'list' && !checklistEditor.children.length) addChecklistItem();
+  document.querySelector('.entry-mode').open = false;
+  if (mode === 'entry') checklistEditor.replaceChildren();
+}
+function inlineEntryBody() {
+  if (inlineMode === 'list') return [...checklistEditor.children].filter((row) => row.lastElementChild.value.trim())
+    .map((row) => '- [' + (row.firstElementChild.checked ? 'x' : ' ') + '] ' + row.lastElementChild.value.trim()).join('\n');
+  const body = inlineText.value.trim();
+  if (inlineMode !== 'reminder' || !body || !reminderTime.value) return inlineMode === 'reminder' ? '' : body;
+  return body + '\n\n⏰ ' + new Date(reminderTime.value).toISOString();
+}
+for (const button of document.querySelectorAll('[data-entry-mode]')) {
+  button.addEventListener('click', () => {
+    setInlineMode(button.dataset.entryMode);
+    updateDesktop();
+    refreshInlineDirty();
+    (inlineMode === 'list' ? checklistEditor.querySelector('input:not([type=checkbox])') : inlineText).focus();
+  });
+}
+inline.addEventListener('input', refreshInlineDirty);
+
 let inlineEnd;
 function selectInlineAgendaSlot(slot) {
   inlineDate = new Date(slot);
@@ -241,7 +295,7 @@ const inlineReset = document.querySelector('#desk-inline-reset');
 function refreshInlineDirty() {
   const attached = hasEntryAttachments(inline);
   inlineReset.hidden = !inlineText.value && !inlineDate && !attached;
-  inline.querySelector('[type=submit]').disabled = !inlineText.value.trim() && !attached;
+  inline.querySelector('[type=submit]').disabled = !inlineEntryBody() && !attached;
 }
 inlineText.addEventListener('input', refreshInlineDirty);
 inlineReset.addEventListener('click', () => {
@@ -283,11 +337,13 @@ for (const [id, mode] of [['desk-inline-day', 'date'], ['desk-inline-time', 'tim
 inline.addEventListener('submit', async (event) => {
   event.preventDefault();
   const session = activeSession;
-  const body = inlineText.value.trim();
+  const body = inlineEntryBody();
   if (!session || (!body && !hasEntryAttachments(inline))) return;
   const button = inline.querySelector('[type=submit]');
   button.disabled = true;
-  const date = inlineDate ?? inlineDefaultDate();
+  const date = inlineMode === 'reminder' ? new Date() : inlineDate ?? inlineDefaultDate();
+  const reminderPermissionNeeded = inlineMode === 'reminder';
+  if (reminderPermissionNeeded && window.Notification?.permission === 'default') void Notification.requestPermission();
   const id = crypto.randomUUID();
   let error;
   try {
@@ -301,6 +357,7 @@ inline.addEventListener('submit', async (event) => {
   document.querySelector('#desk-inline-status').textContent = error ? 'Could not save entry. Try again.' : '';
   if (!error) {
     inline.reset();
+    setInlineMode('entry');
     clearEntryTools(inline);
     inlineDate = undefined;
     inlineEnd = null;
@@ -308,7 +365,9 @@ inline.addEventListener('submit', async (event) => {
     selectedDate = dateKey(date);
     closeWorkPanels();
     await showTimeline(session);
+
   }
 });
+
 
 

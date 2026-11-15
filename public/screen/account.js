@@ -314,6 +314,13 @@ function showAccount() {
   timeline.replaceChildren();
 }
 
+function appendDayHeader(page, date) {
+  const header = document.createElement('header');
+  header.className = 'day-top';
+  header.append(dateHeading(date));
+  page.append(header);
+}
+
 function dateHeading(date) {
   const heading = document.createElement('h2');
   heading.className = 'date';
@@ -361,7 +368,7 @@ function makeAgendaDay(date, scheduled) {
   const day = document.createElement('article');
   day.className = 'day';
   day.dataset.date = dateKey(date);
-  day.append(dateHeading(date));
+  appendDayHeader(day, date);
   appendCelebrations(day, date);
   const slots = document.createElement('div');
   day.append(slots);
@@ -370,11 +377,13 @@ function makeAgendaDay(date, scheduled) {
   const nightLabel = document.createElement('summary');
   nightLabel.textContent = 'Night · 23:00–06:59';
   night.append(nightLabel);
+  const nightPreview = document.createElement('div');
+  nightPreview.className = 'night-preview';
   const hours = [...Array.from({ length: 16 }, (_, index) => index + 7), 23, ...Array.from({ length: 7 }, (_, index) => index)];
   if (sortToggle.checked) hours.reverse();
   for (const hour of hours) {
     const isNight = hour >= 23 || hour < 7;
-    if (isNight && !night.parentNode) slots.append(night);
+    if (isNight && !night.parentNode) slots.append(night, nightPreview);
     const group = isNight ? night : slots;
     const row = document.createElement('button');
     row.type = 'button';
@@ -438,6 +447,14 @@ function makeAgendaDay(date, scheduled) {
       if (!localStorage.getItem(entryFlag(log, 'hidden'))) appendPolaroid(button, log);
       button.addEventListener('click', () => openLogDetail(log));
       group.append(button);
+      renderChecklist(button, log);
+      if (isNight) {
+        const preview = button.cloneNode(true);
+        preview.removeAttribute('data-log-id');
+        preview.querySelectorAll('img').forEach((image) => image.remove());
+        preview.addEventListener('click', () => openLogDetail(log));
+        nightPreview.append(preview);
+      }
     }
   }
 
@@ -578,7 +595,7 @@ function renderLogs(logs) {
       const day = document.createElement('article');
       day.className = 'day';
       day.dataset.logDate = dateKey(date);
-      day.append(dateHeading(date));
+      appendDayHeader(day, date);
   appendCelebrations(day, date);
       timeline.append(day);
       days.set(key, day);
@@ -606,17 +623,19 @@ function renderLogs(logs) {
     body.textContent = desktopMode() && localStorage.getItem(entryFlag(log, 'hidden')) ? 'Hidden entry' : [log.emoji, log.body].filter(Boolean).join(' ');
     if (desktopMode() && localStorage.getItem(entryFlag(log, 'highlight'))) entry.classList.add('entry-highlight');
     record.append(body);
+
     if (!localStorage.getItem(entryFlag(log, 'hidden'))) appendPolaroid(record, log);
     record.addEventListener('click', () => { if (!desktopMode()) openLogDetail(log); });
     record.addEventListener('dblclick', () => { if (desktopMode()) openLogDetail(log); });
     entry.append(header, record);
+    renderChecklist(record, log);
     days.get(key).append(entry);
   }
   if (desktopMode() && !days.has(shiftDate(selectedDate, 0).toLocaleDateString(milogLocale))) {
     const day = document.createElement('article');
     day.className = 'day desk-empty-day';
     day.dataset.logDate = selectedDate;
-    day.append(dateHeading(shiftDate(selectedDate, 0)));
+    appendDayHeader(day, shiftDate(selectedDate, 0));
     appendCelebrations(day, shiftDate(selectedDate, 0));
     const following = [...timeline.children].find((page) => page.dataset.logDate.localeCompare(selectedDate) * dayDirection() < 0);
     timeline.insertBefore(day, following ?? null);
@@ -653,6 +672,7 @@ async function showTimeline(session) {
     if (data.length < pageSize) break;
   }
   accountLogs = logs;
+  scheduleEntryReminders(logs);
   renderLogs(logs);
 }
 
@@ -877,6 +897,7 @@ client.auth.onAuthStateChange((event, session) => {
 document.querySelector('#auth-fields').disabled = false;
 modeButton.disabled = false;
 message.textContent = '';
+
 
 
 

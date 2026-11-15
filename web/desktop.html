@@ -18,8 +18,8 @@
 </section>
 <section class="desk-inline" id="desk-inline" hidden>
   <form id="desk-inline-form">
-    <div class="desk-inline-date"><strong id="desk-inline-title">New entry</strong><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div>
-    <textarea id="desk-inline-text" aria-label="Entry text" placeholder="What’s happening?"></textarea>
+    <div class="desk-inline-date"><details class="entry-mode"><summary id="desk-inline-title">New entry</summary><div><button type="button" data-entry-mode="entry">Entry</button><button type="button" data-entry-mode="list">Checklist</button><button type="button" data-entry-mode="reminder">Reminder</button></div></details><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div>
+    <div id="desk-list-items" hidden></div><label id="desk-reminder-time" hidden>Remind me at <input type="datetime-local"></label><textarea id="desk-inline-text" aria-label="Entry text" placeholder="What’s happening?"></textarea>
     <footer><button type="button" id="desk-inline-reset" hidden>Reset</button><button type="submit">Save</button></footer>
     <p id="desk-inline-status" role="status"></p>
   </form>

@@ -6,19 +6,19 @@
 <title>Milog</title>
 <link rel="stylesheet" href="screen/timeline.css?v=eab09429730e">
 <script src="screen/timeline.js?v=af426774d2e9" defer></script>
-<link rel="stylesheet" href="screen/account.css?v=053fb032feff">
+<link rel="stylesheet" href="screen/account.css?v=ee0c48086a97">
 <script src="screen/supabase.js?v=ec004176d101" defer></script>
 <script src="screen/config.js?v=3b94fdbb790b" defer></script>
 <script src="screen/sky.js?v=9553175b580d" defer></script>
 <script src="screen/locale.js?v=0ef16ffcde68" defer></script>
-<script src="screen/account.js?v=ab9f10e35404" defer></script>
+<script src="screen/account.js?v=b38a13d396b4" defer></script>
 <script src="screen/compose.js?v=fb1d7127a136" defer></script>
 <script src="screen/quick.js?v=3ffd1fde649b" defer></script>
 <script src="screen/emoji.js?v=5c984c13e0bb" defer></script>
-<script src="screen/entry-tools.js?v=504c47c4e957" defer></script>
-<script src="screen/desktop.js?v=bc9b631ab4cb" defer></script>
-<script src="screen/special.js?v=e87d8abfdbe5" defer></script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap"><link rel="icon" type="image/svg+xml" href="assets/milog-logo.svg"></head>
+<script src="screen/entry-tools.js?v=0235180cc39b" defer></script>
+<script src="screen/desktop.js?v=acd58303bc29" defer></script>
+<script src="screen/special.js?v=e1c59e973a63" defer></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap"><link rel="icon" type="image/svg+xml" href="assets/milog-logo.svg"></head>
 <body>
 <main class="phone" aria-label="Milog Timeline">
   <aside class="desktop-sidebar" hidden aria-label="Milog menüsü">
@@ -41,8 +41,8 @@
 </section>
 <section class="desk-inline" id="desk-inline" hidden>
   <form id="desk-inline-form">
-    <div class="desk-inline-date"><strong id="desk-inline-title">New entry</strong><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div>
-    <textarea id="desk-inline-text" aria-label="Entry text" placeholder="What’s happening?"></textarea>
+    <div class="desk-inline-date"><details class="entry-mode"><summary id="desk-inline-title">New entry</summary><div><button type="button" data-entry-mode="entry">Entry</button><button type="button" data-entry-mode="list">Checklist</button><button type="button" data-entry-mode="reminder">Reminder</button></div></details><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div>
+    <div id="desk-list-items" hidden></div><label id="desk-reminder-time" hidden>Remind me at <input type="datetime-local"></label><textarea id="desk-inline-text" aria-label="Entry text" placeholder="What’s happening?"></textarea>
     <footer><button type="button" id="desk-inline-reset" hidden>Reset</button><button type="submit">Save</button></footer>
     <p id="desk-inline-status" role="status"></p>
   </form>

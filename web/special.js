@@ -104,3 +104,64 @@ function appendPolaroid(parent, log) {
     photo.src = data.signedUrl;
   }).catch(() => photoUrls.delete(key));
 }
+
+function renderChecklist(record, log) {
+  if (!activeSession || localStorage.getItem(entryFlag(log, 'hidden'))) return;
+  const lines = log.body.split('\n');
+  const item = /^- \[([ x])\] (.+)$/i;
+  if (!lines.length || !lines.every((line) => item.test(line))) return;
+  const list = document.createElement('ul');
+  list.className = 'entry-checklist';
+  for (const [index, line] of lines.entries()) {
+    const match = item.exec(line);
+    const row = document.createElement('li');
+    const control = document.createElement('button');
+    control.type = 'button';
+    control.setAttribute('aria-pressed', String(match[1].toLowerCase() === 'x'));
+    control.textContent = match[2];
+    control.addEventListener('click', async (event) => {
+      event.stopPropagation();
+      const owner = activeSession?.user.id;
+      if (!owner) return;
+      const done = control.getAttribute('aria-pressed') !== 'true';
+      const body = log.body.split('\n');
+      body[index] = '- [' + (done ? 'x' : ' ') + '] ' + match[2];
+      const next = body.join('\n');
+      const { data, error } = await client.from('logs').update({ body: next }).eq('user_id', owner).eq('id', log.id).eq('body', log.body).select('id').maybeSingle();
+      if (error || !data || activeSession?.user.id !== owner) return;
+      log.body = next;
+      control.setAttribute('aria-pressed', String(done));
+    });
+    control.addEventListener('dblclick', (event) => event.stopPropagation());
+    row.append(control);
+    list.append(row);
+  }
+  record.querySelector('span')?.setAttribute('hidden', '');
+  record.after(list);
+}
+
+let reminderTimer;
+function scheduleEntryReminders(logs) {
+  clearTimeout(reminderTimer);
+  const userId = activeSession?.user.id;
+  if (!userId || !window.Notification) return;
+  const now = Date.now();
+  let next = Infinity;
+  for (const log of logs) {
+    const match = /\n\n⏰ (\d{4}-\d\d-\d\dT[^\s]+)$/.exec(log.body);
+    if (!match) continue;
+    const due = Date.parse(match[1]);
+    const key = 'milog-reminder:' + userId + ':' + log.id + ':' + due;
+    if (!Number.isFinite(due) || localStorage.getItem(key)) continue;
+    if (due > now) next = Math.min(next, due);
+    else if (Notification.permission === 'granted' && now - due < 86400000) {
+      try {
+        new Notification('Milog', { body: log.body.slice(0, match.index), tag: key });
+        localStorage.setItem(key, '1');
+      } catch { /* Notification delivery can be unavailable on some browsers. */ }
+    }
+  }
+  if (Number.isFinite(next)) reminderTimer = setTimeout(() => {
+    if (activeSession?.user.id === userId) scheduleEntryReminders(logs);
+  }, Math.min(2147483647, next - now));
+}
