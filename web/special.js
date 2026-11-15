@@ -135,26 +135,69 @@ function appendPolaroid(parent, log) {
   }).catch(() => photoUrls.delete(key));
 }
 
-function renderChecklist(record, log) {
-  if (!activeSession || localStorage.getItem(entryFlag(log, 'hidden'))) return;
-  const lines = log.body.split('\n');
-  if (lines.at(-1)?.startsWith('📍 ') && lines.at(-2) === '') lines.splice(-2);
-  const item = /^- \[([ x])\] (.+)$/i;
-  const heading = /^## (.+)$/;
-  if (!lines.length || !lines.every((line) => item.test(line) || heading.test(line))) return;
+function entryPresentation(log) {
+  const location = /(?:^|\n\n)📍 ([^\n]+)$/.exec(log.body);
+  const withoutPlace = location ? log.body.slice(0, location.index) : log.body;
+  const reminder = /\n\n⏰ (\d{4}-\d\d-\d\dT[^\s]+)$/.exec(withoutPlace);
+  const due = reminder ? Date.parse(reminder[1]) : NaN;
+  return {
+    text: Number.isFinite(due) ? withoutPlace.slice(0, reminder.index) : withoutPlace,
+    place: location?.[1],
+    due: Number.isFinite(due) ? due : null,
+  };
+}
+
+function shortEntryDate(date) {
+  return new Intl.DateTimeFormat(milogLocale, { day: 'numeric', month: 'short' }).format(date);
+}
+
+function appendReminderDetails(parent, log, due) {
+  if (due === null) return;
+  const meta = document.createElement('span');
+  meta.className = 'entry-reminder-meta';
+  const created = new Date(log.created_at);
+  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - created.getTime()) / 60000));
+  const [unit, divisor] = elapsedMinutes >= 1440 ? ['day', 1440] : elapsedMinutes >= 60 ? ['hour', 60] : ['minute', 1];
+  const ago = new Intl.RelativeTimeFormat(milogLocale, { numeric: 'always' }).format(-Math.floor(elapsedMinutes / divisor), unit);
+  const label = document.createElement('span');
+  label.textContent = milogLanguage === 'tr' ? ago + ' oluşturuldu' : 'Created ' + ago;
+  label.title = created.toLocaleString(milogLocale);
+  const pill = document.createElement('time');
+  pill.className = 'reminder-due';
+  const date = new Date(due);
+  pill.dateTime = date.toISOString();
+  pill.textContent = shortEntryDate(date) + ' - ' + timeFormat.format(date);
+  meta.append(label, pill);
+  parent.append(meta);
+}
+
+function createEntryChecklist(log, text) {
+  if (!activeSession) return null;
+  const itemPattern = /^- \[([ x])\] (.+)$/i;
+  const headingPattern = /^## (.+)$/;
+  const lines = text.split('\n');
+  if (!lines.every((line) => itemPattern.test(line) || headingPattern.test(line))) return null;
   const list = document.createElement('ul');
   list.className = 'entry-checklist';
+  list.dataset.checklistLog = log.id;
+  if (!headingPattern.test(lines[0])) {
+    const title = document.createElement('li');
+    title.className = 'entry-checklist-heading';
+    title.textContent = shortEntryDate(new Date(log.created_at)) + (milogLanguage === 'tr' ? ' - Yapılacaklar listesi' : ' - To do List');
+    list.append(title);
+  }
   for (const [index, line] of lines.entries()) {
-    const match = item.exec(line);
+    const match = itemPattern.exec(line);
     const row = document.createElement('li');
     if (!match) {
       row.className = 'entry-checklist-heading';
-      row.textContent = heading.exec(line)[1];
+      row.textContent = headingPattern.exec(line)[1];
       list.append(row);
       continue;
     }
     const control = document.createElement('button');
     control.type = 'button';
+    control.dataset.checklistIndex = index;
     control.setAttribute('aria-pressed', String(match[1].toLowerCase() === 'x'));
     control.textContent = match[2];
     control.addEventListener('click', async (event) => {
@@ -162,20 +205,26 @@ function renderChecklist(record, log) {
       const owner = activeSession?.user.id;
       if (!owner) return;
       const done = control.getAttribute('aria-pressed') !== 'true';
-      const body = log.body.split('\n');
+      const previous = log.body;
+      const body = previous.split('\n');
       body[index] = '- [' + (done ? 'x' : ' ') + '] ' + match[2];
       const next = body.join('\n');
-      const { data, error } = await client.from('logs').update({ body: next }).eq('user_id', owner).eq('id', log.id).eq('body', log.body).select('id').maybeSingle();
-      if (error || !data || activeSession?.user.id !== owner) return;
-      log.body = next;
-      control.setAttribute('aria-pressed', String(done));
+      control.disabled = true;
+      try {
+        const { data, error } = await client.from('logs').update({ body: next }).eq('user_id', owner).eq('id', log.id).eq('body', previous).select('id').maybeSingle();
+        if (error || !data || activeSession?.user.id !== owner) return;
+        log.body = next;
+        for (const other of document.querySelectorAll('[data-checklist-log]')) {
+          if (other.dataset.checklistLog !== log.id) continue;
+          other.querySelector('[data-checklist-index="' + index + '"]')?.setAttribute('aria-pressed', String(done));
+        }
+      } finally { control.disabled = false; }
     });
     control.addEventListener('dblclick', (event) => event.stopPropagation());
     row.append(control);
     list.append(row);
   }
-  record.querySelector('span')?.setAttribute('hidden', '');
-  record.after(list);
+  return list;
 }
 
 let reminderTimer;
@@ -186,15 +235,14 @@ function scheduleEntryReminders(logs) {
   const now = Date.now();
   let next = Infinity;
   for (const log of logs) {
-    const match = /\n\n⏰ (\d{4}-\d\d-\d\dT[^\s]+)$/.exec(log.body);
-    if (!match) continue;
-    const due = Date.parse(match[1]);
+    const { due, text } = entryPresentation(log);
+    if (due === null) continue;
     const key = 'milog-reminder:' + userId + ':' + log.id + ':' + due;
     if (!Number.isFinite(due) || localStorage.getItem(key)) continue;
     if (due > now) next = Math.min(next, due);
     else if (Notification.permission === 'granted' && now - due < 86400000) {
       try {
-        new Notification('Milog', { body: log.body.slice(0, match.index), tag: key });
+        new Notification('Milog', { body: text, tag: key });
         localStorage.setItem(key, '1');
       } catch { /* Notification delivery can be unavailable on some browsers. */ }
     }

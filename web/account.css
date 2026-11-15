@@ -814,3 +814,45 @@
   }
   .quick-editor-main { grid-template-columns: 105px minmax(0, 1fr); align-items: end; }
 }
+.detail-action-label { display: inline; }
+#detail-body { margin-block: 12px; }
+#detail-date { margin: 0 auto 0 0; }
+#web-log-detail footer svg { display: none; }
+.entry-inline-place { margin-inline-start: .65em; color: var(--muted); font-size: .84em; white-space: normal; }
+.entry-reminder-meta,
+.agenda-record .entry-reminder-meta,
+.timeline .record .entry-reminder-meta {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-inline-start: .65em;
+  font-size: 11px; line-height: 1.4; color: var(--muted); vertical-align: middle;
+}
+.timeline .record .entry-reminder-meta > span { line-height: inherit; }
+.entry-reminder-meta .reminder-due {
+  font: inherit; font-weight: 700; white-space: nowrap; line-height: 1.5; padding: 2px 8px; border-radius: 999px;
+  background: #dce8f4; color: #21466d;
+}
+:root.milog-dark .reminder-due { background: #344d67; color: #e5edf7; }
+.entry-checklist { padding: 0 24px 8px; white-space: normal; }
+.entry-checklist button::before,
+#desk-list-items input[type=checkbox] { box-sizing: border-box; width: 17px; height: 17px; }
+.entry-checklist button[aria-pressed=true]::before,
+#desk-list-items input[type=checkbox]:checked::after { content: ''; background: #315980 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 8 2.5 2.5L12 5' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px 14px no-repeat; }
+#desk-list-items input[type=checkbox]:checked::after { width: 100%; height: 100%; border-radius: 50%; }
+#desk-list-items input:not([type=checkbox]):focus { outline: none; box-shadow: none; }
+#detail-body .entry-checklist { padding-inline: 0; }
+.agenda-entry { position: relative; }
+.agenda-entry .entry-checklist { padding-inline-start: max(28px, calc(52 * var(--u))); }
+.calendar-selection-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.desktop-context #desk-calendar-close { border: 0; background: transparent; padding: 4px 8px; font-size: 21px; }
+@media (min-width: 980px) and (hover: hover) and (pointer: fine) {
+  #desk-entry-preview article footer { display: flex; align-items: center; gap: 5px; }
+  #desk-entry-preview .detail-action-label { position: absolute; clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap; }
+  #desk-entry-preview article footer button { display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; }
+  #desk-entry-preview article footer svg { display: block; width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.55; stroke-linecap: round; stroke-linejoin: round; }
+  #desk-entry-preview article footer button[aria-pressed=true] { color: #275789; background: #dce8f4; }
+  .agenda-entry .agenda-record { padding-inline-end: 35px; }
+  .agenda-entry-more { position: absolute; inset: 0 5px auto auto; width: 31px; height: var(--ruled-line); opacity: 0; }
+  .agenda-entry:is(:hover, :focus-within) .agenda-entry-more { opacity: 1; }
+  .desk-quick > [data-click=quick-logs] { margin-top: 5px; border: 1px solid #91b3a6; }
+  #desk-calendar-entries button { border: 1px solid transparent; border-bottom-color: var(--rule); border-radius: 8px; }
+  #desk-calendar-entries button:is(:hover, :focus-visible) { border-color: color-mix(in srgb, currentColor 18%, transparent); }
+}

@@ -17,7 +17,7 @@ const milogTurkish = new Map(Object.entries({
   'Could not load quick logs.': 'Hızlı kayıtlar yüklenemedi.',
   Settings: 'Ayarlar', Profile: 'Profil', 'My account': 'Hesabım', Language: 'Dil',
   'Page settings': 'Sayfa ayarları', 'Show empty journal pages compactly': 'Günlükte boş sayfaları kompakt göster',
-  Checklist: 'Kontrol listesi', Reminder: 'Hatırlatma', 'Remind me at': 'Hatırlatma zamanı',
+  'To do list': 'Yapılacaklar listesi', Focus: 'Üstte göster', Reminder: 'Hatırlatma', 'Remind me at': 'Hatırlatma zamanı',
   Date: 'Tarih', Time: 'Saat', 'What do you want to remember?': 'Neyi hatırlamak istersin?',
   'Enter the name of the list': 'Listenin adını gir', 'First item': 'İlk madde', 'List item': 'Liste maddesi',
   Location: 'Konum', Theme: 'Tema', Light: 'Açık', Dark: 'Koyu', 'Sign out': 'Çıkış yap',

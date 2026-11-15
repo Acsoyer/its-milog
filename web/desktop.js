@@ -20,6 +20,10 @@ function openWorkPanel(dialog) {
 let desktopMarkedLog = null;
 let desktopMonth = null;
 let desktopCalendarDay = null;
+document.querySelector('#desk-calendar-close').addEventListener('click', () => {
+  desktopCalendarDay = null;
+  updateDesktop();
+});
 const desktopCalendarMode = document.querySelector('#desk-calendar-mode');
 desktopCalendarMode.value = localStorage.getItem('milog-calendar-mode') === 'agenda' ? 'agenda' : 'journal';
 desktopCalendarMode.addEventListener('change', () => localStorage.setItem('milog-calendar-mode', desktopCalendarMode.value));
@@ -34,7 +38,7 @@ function renderDesktopCalendarSelection() {
     const button = document.createElement('button');
     button.type = 'button';
     const summary = document.createElement('span');
-    summary.textContent = timeFormat.format(new Date(log.created_at)) + ' · ' + log.body;
+    summary.textContent = timeFormat.format(new Date(log.created_at)) + ' · ' + entryPresentation(log).text;
     const action = document.createElement('span');
     action.className = 'calendar-go';
     action.textContent = milogLanguage === 'tr' ? 'Kayda git' : 'Go to entry';
@@ -44,9 +48,7 @@ function renderDesktopCalendarSelection() {
       selectedDate = desktopCalendarDay;
       switchView(desktopCalendarMode.value === 'agenda');
     };
-    button.addEventListener('dblclick', show);
-    button.addEventListener('keydown', (event) => { if (event.key === 'Enter') show(); });
-    action.addEventListener('click', show);
+    button.addEventListener('click', show);
     list.append(button);
   }
   if (!list.childElementCount) list.textContent = 'No entries on this day.';
@@ -76,7 +78,7 @@ function renderDesktopSearch() {
   for (const log of (accountLogs ?? []).filter((item) => item.body.toLocaleLowerCase('en').includes(query)).slice(0, 30)) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = new Date(log.created_at).toLocaleDateString(milogLocale) + ' · ' + log.body;
+    button.textContent = new Date(log.created_at).toLocaleDateString(milogLocale) + ' · ' + entryPresentation(log).text;
     button.addEventListener('click', () => revealDesktopLog(log));
     results.append(button);
   }
@@ -137,7 +139,7 @@ function updateDesktop() {
   const date = desktopMonth ?? shiftDate(selectedDate, 0);
   updateDesktopClock();
   document.querySelector('#desk-inline').hidden = !activeSession;
-  document.querySelector('#desk-inline-title').textContent = inlineMode === 'list' ? 'Checklist' : inlineMode === 'reminder' ? 'Reminder' : agenda ? 'Plan an entry' : 'New entry';
+  document.querySelector('#desk-inline-title').textContent = inlineMode === 'list' ? 'To do list' : inlineMode === 'reminder' ? 'Reminder' : agenda ? 'Plan an entry' : 'New entry';
   document.querySelector('#desk-inline-text').placeholder = inlineMode === 'reminder' ? 'What do you want to remember?' : agenda ? 'What are you planning?' : 'What’s happening?';
   for (const button of document.querySelectorAll('.desktop-sidebar nav [data-click], .desk-tabs [data-click]')) {
     const active = button.dataset.click === (agenda ? 'agenda-view' : 'log-view');
@@ -202,6 +204,21 @@ const inlineText = document.querySelector('#desk-inline-text');
 const inlinePreview = document.querySelector('#desk-entry-preview');
 const detailCard = detail.querySelector('article');
 const entryMenu = document.querySelector('#desk-entry-menu');
+for (const [action, path] of Object.entries({
+  edit: 'M4 20l4-.9L20 7l-3-3L5 16l-1 4Zm11-14 3 3',
+  delete: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7m4-7v7',
+  share: 'M12 16V3m-4 4 4-4 4 4M6 12H4v9h16v-9h-2',
+  hide: 'M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Zm10-3a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z',
+  highlight: 'm12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z',
+})) {
+  const button = document.querySelector('#detail-' + action);
+  const label = document.createElement('span');
+  label.className = 'detail-action-label';
+  label.textContent = button.textContent;
+  button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + path + '"/></svg>';
+  button.append(label);
+  button.title = label.textContent;
+}
 function showDesktopEntryPreview() {
   inline.hidden = true;
   inlinePreview.hidden = false;
@@ -225,7 +242,7 @@ detailCard.querySelector('form').addEventListener('submit', (event) => {
 function openDesktopEntryMenu(log, anchor) {
   currentDetail = log;
   refreshDetailActions();
-  entryMenu.replaceChildren();
+  entryMenu.replaceChildren(makePickerButton('Focus', () => { entryMenu.close(); openLogDetail(log); }));
   for (const action of detailCard.querySelectorAll('footer button')) {
     const option = document.createElement('button');
     option.type = 'button';

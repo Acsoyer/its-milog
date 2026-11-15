@@ -175,7 +175,12 @@ function openLogDetail(log) {
   const date = new Date(log.created_at);
   document.querySelector('#detail-time').textContent = date.toLocaleTimeString(milogLocale, { hour: '2-digit', minute: '2-digit' });
   document.querySelector('#detail-date').textContent = date.toLocaleDateString(milogLocale, { dateStyle: 'full' });
-  document.querySelector('#detail-body').textContent = log.body;
+  const body = document.querySelector('#detail-body');
+  const presentation = entryPresentation(log);
+  const checklist = createEntryChecklist(log, presentation.text);
+  body.replaceChildren(checklist ?? document.createTextNode(presentation.text));
+  if (presentation.place) appendEntryPlace(body, presentation.place);
+  appendReminderDetails(body, log, presentation.due);
   document.querySelector('#detail-status').textContent = '';
   const attachments = document.querySelector('#detail-attachments');
   attachments.replaceChildren();
@@ -204,7 +209,9 @@ function refreshDetailActions() {
   ]) {
     const button = document.getElementById(id);
     const enabled = localStorage.getItem(entryFlag(currentDetail, flag)) === '1';
-    button.textContent = enabled ? on : off;
+    const label = enabled ? on : off;
+    button.querySelector('.detail-action-label').textContent = label;
+    button.title = label;
     button.setAttribute('aria-pressed', String(enabled));
   }
 }
@@ -445,29 +452,52 @@ function makeAgendaDay(date, scheduled) {
     row.append(label);
     group.append(slotRow);
     for (const log of entries) {
-      const button = document.createElement('button');
-      button.className = 'agenda-record';
-      button.dataset.logId = log.id;
-      const time = document.createElement('time');
-      time.textContent = new Date(log.created_at).toLocaleTimeString(milogLocale, { hour: '2-digit', minute: '2-digit' });
-      const body = document.createElement('span');
-      body.textContent = desktopMode() && localStorage.getItem(entryFlag(log, 'hidden')) ? 'Hidden entry' : [log.emoji, log.body].filter(Boolean).join(' ');
-      button.append(time, body);
-      if (!localStorage.getItem(entryFlag(log, 'hidden'))) appendPolaroid(button, log);
-      button.addEventListener('click', () => openLogDetail(log));
-      group.append(button);
-      renderChecklist(button, log);
-      if (isNight) {
-        const preview = button.cloneNode(true);
-        preview.removeAttribute('data-log-id');
-        preview.querySelectorAll('img').forEach((image) => image.remove());
-        preview.addEventListener('click', () => openLogDetail(log));
-        nightPreview.append(preview);
-      }
+      group.append(makeAgendaRecord(log, false));
+      if (isNight) nightPreview.append(makeAgendaRecord(log, true));
     }
   }
 
   return day;
+}
+
+function appendEntryPlace(parent, place) {
+  const label = document.createElement('span');
+  label.className = 'entry-inline-place';
+  label.textContent = '📍 ' + place;
+  parent.append(label);
+}
+
+function makeAgendaRecord(log, preview) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'agenda-entry';
+  if (!preview) wrapper.dataset.logId = log.id;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'agenda-record';
+  const time = document.createElement('time');
+  time.textContent = timeFormat.format(new Date(log.created_at));
+  const body = document.createElement('span');
+  const hidden = desktopMode() && localStorage.getItem(entryFlag(log, 'hidden'));
+  const { text, place, due } = entryPresentation(log);
+  const checklist = !hidden && createEntryChecklist(log, text);
+  body.textContent = hidden ? 'Hidden entry' : checklist ? '' : [log.emoji, text].filter(Boolean).join(' ');
+  if (!hidden && place) appendEntryPlace(body, place);
+  if (!hidden) appendReminderDetails(body, log, due);
+  button.append(time, body);
+  if (!preview && !hidden) appendPolaroid(button, log);
+  button.addEventListener('click', () => openLogDetail(log));
+  wrapper.append(button);
+  if (checklist) wrapper.append(checklist);
+  if (desktopMode()) {
+    const more = document.createElement('button');
+    more.type = 'button';
+    more.className = 'entry-more agenda-entry-more';
+    more.setAttribute('aria-label', 'Entry actions');
+    more.textContent = '•••';
+    more.addEventListener('click', () => openDesktopEntryMenu(log, more));
+    wrapper.append(more);
+  }
+  return wrapper;
 }
 
 function agendaPage(date) {
@@ -630,22 +660,23 @@ function renderLogs(logs) {
     record.className = 'record';
     const body = document.createElement('span');
     const hidden = desktopMode() && localStorage.getItem(entryFlag(log, 'hidden'));
-    const locationSuffix = desktopMode() && !hidden ? /(?:^|\n\n)📍 ([^\n]+)$/.exec(log.body) : null;
-    const place = !hidden && desktopMode() && (log.location || locationSuffix?.[1]);
+    const presentation = entryPresentation(log);
+    const place = !hidden && desktopMode() && presentation.place;
     if (place) {
       const label = document.createElement('span');
       label.className = 'journal-location';
       label.textContent = '📍 ' + place;
       header.insertBefore(label, more);
     }
-    body.textContent = hidden ? 'Hidden entry' : [log.emoji, locationSuffix ? log.body.slice(0, locationSuffix.index) : log.body].filter(Boolean).join(' ');
+    const checklist = !hidden && createEntryChecklist(log, presentation.text);
+    body.textContent = hidden ? 'Hidden entry' : checklist ? '' : [log.emoji, presentation.text].filter(Boolean).join(' ');
+    if (!hidden) appendReminderDetails(body, log, presentation.due);
     record.append(body);
 
     if (!localStorage.getItem(entryFlag(log, 'hidden'))) appendPolaroid(record, log);
-    record.addEventListener('click', () => { if (!desktopMode()) openLogDetail(log); });
-    record.addEventListener('dblclick', () => { if (desktopMode()) openLogDetail(log); });
+    record.addEventListener('click', () => openLogDetail(log));
     entry.append(header, record);
-    renderChecklist(record, log);
+    if (checklist) entry.append(checklist);
     days.get(key).append(entry);
   }
   if (desktopMode() && !days.has(shiftDate(selectedDate, 0).toLocaleDateString(milogLocale))) {

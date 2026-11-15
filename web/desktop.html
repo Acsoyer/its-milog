@@ -18,7 +18,7 @@
 </section>
 <section class="desk-inline" id="desk-inline" hidden>
   <form id="desk-inline-form">
-    <div class="desk-inline-date"><details class="entry-mode"><summary id="desk-inline-title">New entry</summary><div><button type="button" data-entry-mode="entry">Entry</button><button type="button" data-entry-mode="list">Checklist</button><button type="button" data-entry-mode="reminder">Reminder</button></div></details><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div>
+    <div class="desk-inline-date"><details class="entry-mode"><summary id="desk-inline-title">New entry</summary><div><button type="button" data-entry-mode="entry">Entry</button><button type="button" data-entry-mode="list">To do list</button><button type="button" data-entry-mode="reminder">Reminder</button></div></details><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div>
     <div id="desk-list-items" hidden></div><div id="desk-reminder-time" hidden><span>Remind me at</span><button type="button" id="desk-reminder-day" aria-haspopup="dialog">Date</button><button type="button" id="desk-reminder-clock" aria-haspopup="dialog">Time</button></div><textarea id="desk-inline-text" rows="1" aria-label="Entry text" placeholder="What’s happening?"></textarea>
     <footer><button type="button" id="desk-inline-reset" hidden>Reset</button><button type="submit">Save</button></footer>
     <p id="desk-inline-status" role="status"></p>
@@ -32,7 +32,7 @@
   <header><strong>Calendar</strong><button type="button" id="desk-month-prev" aria-label="Previous month">‹</button><button type="button" id="desk-month-next" aria-label="Next month">›</button></header>
   <div id="desk-month"></div>
   <section id="desk-calendar-selection" hidden>
-    <h3 id="desk-calendar-day"></h3><div id="desk-calendar-entries"></div>
+    <div class="calendar-selection-heading"><h3 id="desk-calendar-day"></h3><button type="button" id="desk-calendar-close" aria-label="Close day entries">×</button></div><div id="desk-calendar-entries"></div>
     <label>Open entry in <select id="desk-calendar-mode"><option value="journal">Journal</option><option value="agenda">Agenda</option></select></label>
   </section>
 </aside>

@@ -479,11 +479,11 @@
       });
       shortcut.append(icon(item.category ? item.icon || 'mdi:folder-open-outline' : item.emoji), document.createTextNode(item.label));
       shortcut.classList.toggle('quick-shortcut-folder', item.category);
-      if (!item.category) {
+      {
         const hint = document.createElement('small');
         hint.className = 'quick-shortcut-hint';
         hint.setAttribute('aria-hidden', 'true');
-        hint.textContent = { duration: 'TIME', volume: 'ML', count: 'COUNT' }[item.measurementUnit] ?? (item.durationOptions?.length ? 'TIME' : '+ Add');
+        hint.textContent = item.category ? (milogLanguage === 'tr' ? 'Aç' : 'Open') : ({ duration: 'TIME', volume: 'ML', count: 'COUNT' }[item.measurementUnit] ?? (item.durationOptions?.length ? 'TIME' : '+ Add'));
         shortcut.append(hint);
       }
       shortcuts.append(shortcut);

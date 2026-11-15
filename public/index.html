@@ -6,18 +6,18 @@
 <title>Milog</title>
 <link rel="stylesheet" href="screen/timeline.css?v=eab09429730e">
 <script src="screen/timeline.js?v=af426774d2e9" defer></script>
-<link rel="stylesheet" href="screen/account.css?v=c86f79bd1ec5">
+<link rel="stylesheet" href="screen/account.css?v=9884a5aa5c56">
 <script src="screen/supabase.js?v=ec004176d101" defer></script>
 <script src="screen/config.js?v=3b94fdbb790b" defer></script>
 <script src="screen/sky.js?v=9553175b580d" defer></script>
-<script src="screen/locale.js?v=d58a172d6f9d" defer></script>
-<script src="screen/account.js?v=0bcbf8898b0c" defer></script>
+<script src="screen/locale.js?v=767e550552b4" defer></script>
+<script src="screen/account.js?v=ca1dcfcd4d72" defer></script>
 <script src="screen/compose.js?v=d476006ac1f9" defer></script>
-<script src="screen/quick.js?v=9594a32c8874" defer></script>
+<script src="screen/quick.js?v=b936456ae795" defer></script>
 <script src="screen/emoji.js?v=63740848c311" defer></script>
 <script src="screen/entry-tools.js?v=b5dac9d78b23" defer></script>
-<script src="screen/desktop.js?v=2a3c20394ae8" defer></script>
-<script src="screen/special.js?v=fd5b7e9cd75e" defer></script>
+<script src="screen/desktop.js?v=d36fdcebe33a" defer></script>
+<script src="screen/special.js?v=b2642a47b5ca" defer></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap"><link rel="icon" type="image/svg+xml" href="assets/milog-logo.svg"></head>
 <body>
 <main class="phone" aria-label="Milog Timeline">
@@ -41,7 +41,7 @@
 </section>
 <section class="desk-inline" id="desk-inline" hidden>
   <form id="desk-inline-form">
-    <div class="desk-inline-date"><details class="entry-mode"><summary id="desk-inline-title">New entry</summary><div><button type="button" data-entry-mode="entry">Entry</button><button type="button" data-entry-mode="list">Checklist</button><button type="button" data-entry-mode="reminder">Reminder</button></div></details><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div>
+    <div class="desk-inline-date"><details class="entry-mode"><summary id="desk-inline-title">New entry</summary><div><button type="button" data-entry-mode="entry">Entry</button><button type="button" data-entry-mode="list">To do list</button><button type="button" data-entry-mode="reminder">Reminder</button></div></details><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div>
     <div id="desk-list-items" hidden></div><div id="desk-reminder-time" hidden><span>Remind me at</span><button type="button" id="desk-reminder-day" aria-haspopup="dialog">Date</button><button type="button" id="desk-reminder-clock" aria-haspopup="dialog">Time</button></div><textarea id="desk-inline-text" rows="1" aria-label="Entry text" placeholder="What’s happening?"></textarea>
     <footer><button type="button" id="desk-inline-reset" hidden>Reset</button><button type="submit">Save</button></footer>
     <p id="desk-inline-status" role="status"></p>
@@ -55,7 +55,7 @@
   <header><strong>Calendar</strong><button type="button" id="desk-month-prev" aria-label="Previous month">‹</button><button type="button" id="desk-month-next" aria-label="Next month">›</button></header>
   <div id="desk-month"></div>
   <section id="desk-calendar-selection" hidden>
-    <h3 id="desk-calendar-day"></h3><div id="desk-calendar-entries"></div>
+    <div class="calendar-selection-heading"><h3 id="desk-calendar-day"></h3><button type="button" id="desk-calendar-close" aria-label="Close day entries">×</button></div><div id="desk-calendar-entries"></div>
     <label>Open entry in <select id="desk-calendar-mode"><option value="journal">Journal</option><option value="agenda">Agenda</option></select></label>
   </section>
 </aside>
@@ -114,9 +114,9 @@
 <dialog id="web-log-detail" class="full-screen" aria-label="Kayıt detayı">
   <article>
     <header><time id="detail-time"></time><form method="dialog"><button aria-label="Close">×</button></form></header>
-    <p id="detail-date"></p><p id="detail-body"></p>
+    <div id="detail-body"></div>
     <div id="detail-attachments"></div>
-    <footer><button type="button" id="detail-edit">Edit</button><button type="button" id="detail-delete">Delete</button><button type="button" id="detail-share">Share</button><button type="button" id="detail-hide">Hide</button><button type="button" id="detail-highlight">Highlight of the day</button></footer>
+    <footer><p id="detail-date"></p><button type="button" id="detail-edit">Edit</button><button type="button" id="detail-delete">Delete</button><button type="button" id="detail-share">Share</button><button type="button" id="detail-hide">Hide</button><button type="button" id="detail-highlight">Highlight of the day</button></footer>
     <p id="detail-status" role="status"></p>
   </article>
 </dialog>
