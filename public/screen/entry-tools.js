@@ -1,5 +1,22 @@
 const entryToolStates = new Map();
 
+function growEntryField(textarea) {
+  if (!textarea.hidden && desktopMode()) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }
+}
+
+function anchorEntryPicker(dialog, button) {
+  const anchor = button.getBoundingClientRect();
+  const { width, height } = dialog.getBoundingClientRect();
+  const below = innerHeight - anchor.bottom;
+  const above = anchor.top;
+  dialog.style.left = Math.max(8, Math.min(anchor.left, innerWidth - width - 8)) + 'px';
+  dialog.style.top = Math.max(8, below >= height + 8 || below >= above ? anchor.bottom + 8 : anchor.top - height - 8) + 'px';
+  dialog.style.maxHeight = Math.max(100, (below >= height + 8 || below >= above ? below : above) - 16) + 'px';
+}
+
 function setupEntryTools(form, textarea, onChange) {
   const toolbar = document.createElement('div');
   toolbar.className = 'entry-tools';
@@ -7,6 +24,11 @@ function setupEntryTools(form, textarea, onChange) {
   preview.className = 'entry-tools-preview';
   const state = { files: {}, emoji: '', location: '' };
   entryToolStates.set(form, state);
+  let writingField = textarea;
+  form.addEventListener('focusin', (event) => {
+    if (event.target === textarea || event.target.matches('#desk-list-items input:not([type=checkbox])')) writingField = event.target;
+  });
+  textarea.addEventListener('input', () => growEntryField(textarea));
   const icons = {
     image: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/>',
     audio: '<path d="M3 10v4m4-8v12m5-15v18m5-15v12m4-8v4"/>',
@@ -60,12 +82,11 @@ function setupEntryTools(form, textarea, onChange) {
         dialog.className = 'entry-tool-picker';
         const pickerForm = document.createElement('form');
         pickerForm.method = 'dialog';
+        const editor = textarea.hidden && writingField.isConnected ? writingField : textarea;
         const input = document.createElement('input');
         input.setAttribute('aria-label', label);
         input.placeholder = key === 'emoji' ? '🙂' : 'City or place';
         input.value = state[key];
-        const done = document.createElement('button');
-        done.textContent = 'Done';
         if (key === 'location') {
           locationOptions(pickerForm, input);
         } else {
@@ -75,6 +96,13 @@ function setupEntryTools(form, textarea, onChange) {
           grid.className = 'emoji-grid';
           const categories = Object.entries(window.MilogEmoji ?? {});
           const labels = { Tümü: 'All', Günlük: 'Daily', Aktivite: 'Activities', Duygu: 'Feelings', Yerler: 'Places' };
+          const search = document.createElement('input');
+          search.type = 'search';
+          search.placeholder = milogLanguage === 'tr' ? 'Emoji ara' : 'Search emoji';
+          search.setAttribute('aria-label', search.placeholder);
+          search.autofocus = true;
+          let category = 'Tümü';
+          const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f\uFE0F]/g, '').toLowerCase().trim();
           const render = (items) => {
             grid.replaceChildren(...items.map((emoji) => {
               const choice = document.createElement('button');
@@ -86,27 +114,36 @@ function setupEntryTools(form, textarea, onChange) {
               });
               return choice;
             }));
+            if (!items.length) grid.textContent = milogLanguage === 'tr' ? 'Emoji bulunamadı.' : 'No emoji found.';
           };
-          for (const [category, items] of [...categories].sort(([a], [b]) => Number(b === 'Tümü') - Number(a === 'Tümü'))) {
+          const filter = () => {
+            const query = normalize(search.value);
+            const items = window.MilogEmoji?.[category] ?? [];
+            render(query ? items.filter((emoji) => normalize(emoji + ' ' + (window.MilogEmojiKeywords?.[emoji] ?? '')).includes(query)) : items);
+          };
+          for (const [name] of [...categories].sort(([a], [b]) => Number(b === 'Tümü') - Number(a === 'Tümü'))) {
             const tab = document.createElement('button');
             tab.type = 'button';
-            tab.textContent = milogLanguage === 'tr' ? category : labels[category] ?? category;
-            tab.setAttribute('aria-pressed', String(category === 'Tümü'));
+            tab.textContent = milogLanguage === 'tr' ? name : labels[name] ?? name;
+            tab.setAttribute('aria-pressed', String(name === 'Tümü'));
             tab.addEventListener('click', () => {
               segments.querySelector('[aria-pressed=true]')?.setAttribute('aria-pressed', 'false');
               tab.setAttribute('aria-pressed', 'true');
-              render(items);
+              category = name;
+              filter();
             });
             segments.append(tab);
           }
-          render(window.MilogEmoji?.Tümü ?? []);
-          pickerForm.append(segments, grid);
+          search.addEventListener('input', filter);
+          search.addEventListener('keydown', (event) => { if (event.key === 'Enter') event.preventDefault(); });
+          filter();
+          pickerForm.append(search, segments, grid);
         }
         const heading = document.createElement('h2');
         heading.textContent = key === 'location' ? (milogLanguage === 'tr' ? 'Konum ekle' : 'Add location') : (milogLanguage === 'tr' ? 'Emoji ekle' : 'Add emoji');
-        if (key === 'location') {
+        {
           const header = document.createElement('header');
-          header.className = 'location-heading';
+          header.className = 'entry-picker-heading';
           const close = document.createElement('button');
           close.type = 'button';
           close.textContent = '×';
@@ -114,30 +151,27 @@ function setupEntryTools(form, textarea, onChange) {
           close.addEventListener('click', () => dialog.close());
           header.append(heading, close);
           pickerForm.prepend(header);
-        } else pickerForm.prepend(heading);
+        }
         if (key === 'emoji') {
           dialog.classList.add('entry-emoji-picker');
           input.type = 'hidden';
-          done.type = 'button';
-          done.addEventListener('click', () => dialog.close());
           pickerForm.append(input);
         }
-        if (key === 'emoji') pickerForm.append(done);
         dialog.append(pickerForm);
         document.body.append(dialog);
         dialog.addEventListener('close', () => dialog.remove(), { once: true });
+        dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
         pickerForm.addEventListener('submit', () => {
           if (key === 'emoji') {
-            const start = textarea.selectionStart;
-            const finish = textarea.selectionEnd;
-            if (input.value) textarea.setRangeText(input.value, start, finish, 'end');
-            textarea.dispatchEvent(new Event('input', { bubbles: true }));
-            queueMicrotask(() => textarea.focus());
+            if (input.value) editor.setRangeText(input.value, editor.selectionStart, editor.selectionEnd, 'end');
+            editor.dispatchEvent(new Event('input', { bubbles: true }));
+            queueMicrotask(() => editor.focus());
           } else state[key] = input.value.trim();
           draw();
           onChange();
         });
         dialog.showModal();
+        anchorEntryPicker(dialog, button);
       });
     }
     toolbar.append(button);

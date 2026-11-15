@@ -52,7 +52,9 @@ $emojiStart = $icons.IndexOf('const emojiCategories:')
 $emojiEnd = $icons.IndexOf("emojiCategories.Tümü =", $emojiStart)
 if ($emojiStart -lt 0 -or $emojiEnd -lt 0) { throw 'Mobile emoji catalog not found.' }
 $emojiEnd = $icons.IndexOf(";", $emojiEnd) + 1
-$emojiData = $icons.Substring($emojiStart, $emojiEnd - $emojiStart) + "`nwindow.MilogEmoji = emojiCategories;"
+$keywordsStart = $icons.IndexOf('const emojiKeywords:')
+$keywordsEnd = $icons.IndexOf('const glyphMap', $keywordsStart)
+$emojiData = $icons.Substring($emojiStart, $emojiEnd - $emojiStart) + "`n" + $icons.Substring($keywordsStart, $keywordsEnd - $keywordsStart) + "`nwindow.MilogEmoji = emojiCategories; window.MilogEmojiKeywords = emojiKeywords;"
 $emojiJs = $emojiData | node -e "const fs = require('fs'); const ts = require('typescript'); process.stdout.write(ts.transpile(fs.readFileSync(0, 'utf8'), { target: ts.ScriptTarget.ES2020 }));"
 if ($LASTEXITCODE) { throw 'Emoji catalog compilation failed.' }
 Set-Content -Encoding utf8 "$screen/emoji.js" $emojiJs

@@ -138,7 +138,7 @@ function updateDesktop() {
   updateDesktopClock();
   document.querySelector('#desk-inline').hidden = !activeSession;
   document.querySelector('#desk-inline-title').textContent = inlineMode === 'list' ? 'Checklist' : inlineMode === 'reminder' ? 'Reminder' : agenda ? 'Plan an entry' : 'New entry';
-  document.querySelector('#desk-inline-text').placeholder = agenda ? 'What are you planning?' : 'What’s happening?';
+  document.querySelector('#desk-inline-text').placeholder = inlineMode === 'reminder' ? 'What do you want to remember?' : agenda ? 'What are you planning?' : 'What’s happening?';
   for (const button of document.querySelectorAll('.desktop-sidebar nav [data-click], .desk-tabs [data-click]')) {
     const active = button.dataset.click === (agenda ? 'agenda-view' : 'log-view');
     button.setAttribute('aria-pressed', String(active));
@@ -254,46 +254,85 @@ let inlineDate;
 let inlineMode = 'entry';
 const checklistEditor = document.querySelector('#desk-list-items');
 const reminderEditor = document.querySelector('#desk-reminder-time');
-const reminderTime = reminderEditor.querySelector('input');
-function addChecklistItem(text = '') {
-  const row = document.createElement('label');
-  const check = document.createElement('input');
-  check.type = 'checkbox';
-  check.setAttribute('aria-label', 'Mark complete');
+let reminderDate = null;
+let reminderClock = null;
+const reminderDayButton = document.querySelector('#desk-reminder-day');
+const reminderClockButton = document.querySelector('#desk-reminder-clock');
+function addChecklistItem(heading = false, after = checklistEditor.lastElementChild) {
+  const row = document.createElement('div');
+  row.className = 'checklist-edit-row';
+  row.classList.toggle('checklist-heading', heading);
   const input = document.createElement('input');
-  input.placeholder = 'List item';
-  input.value = text;
+  input.placeholder = heading ? 'Enter the name of the list' : checklistEditor.querySelector('.checklist-edit-row:not(.checklist-heading)') ? 'List item' : 'First item';
+  input.setAttribute('aria-label', input.placeholder);
+  if (!heading) {
+    const check = document.createElement('input');
+    check.type = 'checkbox';
+    check.setAttribute('aria-label', 'Mark complete');
+    row.append(check);
+  }
+  row.append(input);
   input.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && !event.isComposing) {
       event.preventDefault();
-      addChecklistItem().focus();
-    } else if (event.key === 'Backspace' && !input.value && checklistEditor.children.length > 1) {
+      const next = row.nextElementSibling;
+      if (!event.shiftKey && next && !next.classList.contains('checklist-heading') && !next.lastElementChild.value) next.lastElementChild.focus();
+      else addChecklistItem(event.shiftKey, row).focus();
+    } else if (event.key === 'Backspace' && !input.value && row !== checklistEditor.firstElementChild) {
       event.preventDefault();
-      (row.previousElementSibling ?? row.nextElementSibling).lastElementChild.focus();
+      row.previousElementSibling.lastElementChild.focus();
       row.remove();
       refreshInlineDirty();
     }
   });
-  row.append(check, input);
-  checklistEditor.append(row);
+  if (after) after.after(row);
+  else checklistEditor.append(row);
   return input;
+}
+function resetChecklist() {
+  checklistEditor.replaceChildren();
+  addChecklistItem(true);
+  addChecklistItem();
+}
+function reminderDue() {
+  if (!reminderDate || !reminderClock) return null;
+  const due = new Date(reminderDate);
+  due.setHours(reminderClock.getHours(), reminderClock.getMinutes(), 0, 0);
+  return due;
+}
+for (const [button, mode] of [[reminderDayButton, 'date'], [reminderClockButton, 'time']]) {
+  button.addEventListener('click', () => {
+    const previousStart = start;
+    const previousEnd = end;
+    start = mode === 'date' ? reminderDate ?? new Date() : reminderClock ?? new Date();
+    end = null;
+    showComposePicker(mode, button, (value) => {
+      if (mode === 'date') reminderDate = value;
+      else reminderClock = value;
+      refreshInlineDates();
+      refreshInlineDirty();
+    });
+    start = previousStart;
+    end = previousEnd;
+  });
 }
 function setInlineMode(mode) {
   inlineMode = mode;
   checklistEditor.hidden = mode !== 'list';
   reminderEditor.hidden = mode !== 'reminder';
   inlineText.hidden = mode === 'list';
-  reminderTime.required = mode === 'reminder';
-  if (mode === 'list' && !checklistEditor.children.length) addChecklistItem();
+  if (mode === 'list' && !checklistEditor.children.length) resetChecklist();
+  growEntryField(inlineText);
   document.querySelector('.entry-mode').open = false;
   if (mode === 'entry') checklistEditor.replaceChildren();
 }
 function inlineEntryBody() {
   if (inlineMode === 'list') return [...checklistEditor.children].filter((row) => row.lastElementChild.value.trim())
-    .map((row) => '- [' + (row.firstElementChild.checked ? 'x' : ' ') + '] ' + row.lastElementChild.value.trim()).join('\n');
+    .map((row) => (row.classList.contains('checklist-heading') ? '## ' : '- [' + (row.firstElementChild.checked ? 'x' : ' ') + '] ') + row.lastElementChild.value.trim()).join('\n');
   const body = inlineText.value.trim();
-  if (inlineMode !== 'reminder' || !body || !reminderTime.value) return inlineMode === 'reminder' ? '' : body;
-  return body + '\n\n⏰ ' + new Date(reminderTime.value).toISOString();
+  if (inlineMode !== 'reminder') return body;
+  const due = reminderDue();
+  return body && due ? body + '\n\n⏰ ' + due.toISOString() : '';
 }
 for (const button of document.querySelectorAll('[data-entry-mode]')) {
   button.addEventListener('click', () => {
@@ -315,12 +354,15 @@ function selectInlineAgendaSlot(slot) {
 const inlineReset = document.querySelector('#desk-inline-reset');
 function refreshInlineDirty() {
   const attached = hasEntryAttachments(inline);
-  inlineReset.hidden = !inlineText.value && !inlineDate && !attached;
-  inline.querySelector('[type=submit]').disabled = !inlineEntryBody() && !attached;
+  inlineReset.hidden = !inlineText.value && !inlineDate && !reminderDate && !reminderClock && !inlineEntryBody() && !attached;
+  inline.querySelector('[type=submit]').disabled = !inlineEntryBody() && (inlineMode === 'reminder' || !attached);
 }
 inlineText.addEventListener('input', refreshInlineDirty);
 inlineReset.addEventListener('click', () => {
   inline.reset();
+  reminderDate = reminderClock = null;
+  if (inlineMode === 'list') resetChecklist();
+  growEntryField(inlineText);
   inlineDate = undefined;
   inlineEnd = null;
   clearEntryTools(inline);
@@ -336,6 +378,8 @@ function inlineDefaultDate() {
 }
 function refreshInlineDates() {
   const date = inlineDate ?? inlineDefaultDate();
+  reminderDayButton.textContent = reminderDate?.toLocaleDateString(milogLocale, { day: 'numeric', month: 'short' }) ?? 'Date';
+  reminderClockButton.textContent = reminderClock ? timeFormat.format(reminderClock) : 'Time';
   document.querySelector('#desk-inline-day').textContent = date.toLocaleDateString(milogLocale, { day: 'numeric', month: 'short' });
   document.querySelector('#desk-inline-time').textContent = timeFormat.format(date) + (inlineEnd ? ' – ' + formatEnd(date, inlineEnd) : '');
 }
@@ -359,7 +403,7 @@ inline.addEventListener('submit', async (event) => {
   event.preventDefault();
   const session = activeSession;
   const body = inlineEntryBody();
-  if (!session || (!body && !hasEntryAttachments(inline))) return;
+  if (!session || (!body && (inlineMode === 'reminder' || !hasEntryAttachments(inline)))) return;
   const button = inline.querySelector('[type=submit]');
   button.disabled = true;
   const date = inlineMode === 'reminder' ? new Date() : inlineDate ?? inlineDefaultDate();
@@ -378,6 +422,7 @@ inline.addEventListener('submit', async (event) => {
   document.querySelector('#desk-inline-status').textContent = error ? 'Could not save entry. Try again.' : '';
   if (!error) {
     inline.reset();
+    reminderDate = reminderClock = null;
     setInlineMode('entry');
     clearEntryTools(inline);
     inlineDate = undefined;

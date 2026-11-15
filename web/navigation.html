@@ -39,6 +39,7 @@
   <form method="dialog" class="screen-header"><h2 id="timeline-settings-title"></h2><button aria-label="Close">×</button></form>
   <button id="settings-mobile-view" type="button">Switch to mobile view</button>
   <label>Scroll order <select id="timeline-direction"><option value="newest">Newer days above</option><option value="oldest">Older days above</option></select></label>
+  <label id="timeline-compact-row" hidden><input id="timeline-compact" type="checkbox"> Show empty journal pages compactly</label>
   <label id="timeline-sort-row"><input id="timeline-sort" type="checkbox"> Geç saatler üstte</label>
 </dialog>
 <dialog id="timeline-activity" class="bottom-sheet"><form method="dialog" class="screen-header"><h2>Recent activity</h2><button aria-label="Close">×</button></form><div id="web-activity-list"></div></dialog>
@@ -112,7 +113,7 @@
 <dialog id="quick-editor" class="bottom-sheet">
   <form id="quick-editor-form">
     <header class="screen-header"><h2 id="quick-editor-title">New quick log</h2><button type="button" id="quick-editor-x" aria-label="Close">×</button></header>
-    <div class="quick-editor-main"><input id="quick-emoji" aria-label="Icon" placeholder="Icon" list="quick-symbols"><input id="quick-label" aria-label="Button name" placeholder="Button name: Kahve" maxlength="60" required></div>
+    <div class="quick-editor-main"><div class="quick-symbol-field"><span id="quick-symbol-preview"></span><input id="quick-emoji" aria-label="Icon" placeholder="Icon" list="quick-symbols"></div><input id="quick-label" aria-label="Button name" placeholder="Button name: Kahve" maxlength="60" required></div>
     <datalist id="quick-symbols"><option value="💧"><option value="☕"><option value="🚶"><option value="mdi:youtube"><option value="mdi:brain"></datalist>
     <details><summary>Customize entry text</summary><label>Entry text<input id="quick-text"></label></details>
     <fieldset class="quick-list-field"><legend>Lists</legend><div id="quick-editor-lists"></div></fieldset>

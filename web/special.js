@@ -138,13 +138,21 @@ function appendPolaroid(parent, log) {
 function renderChecklist(record, log) {
   if (!activeSession || localStorage.getItem(entryFlag(log, 'hidden'))) return;
   const lines = log.body.split('\n');
+  if (lines.at(-1)?.startsWith('📍 ') && lines.at(-2) === '') lines.splice(-2);
   const item = /^- \[([ x])\] (.+)$/i;
-  if (!lines.length || !lines.every((line) => item.test(line))) return;
+  const heading = /^## (.+)$/;
+  if (!lines.length || !lines.every((line) => item.test(line) || heading.test(line))) return;
   const list = document.createElement('ul');
   list.className = 'entry-checklist';
   for (const [index, line] of lines.entries()) {
     const match = item.exec(line);
     const row = document.createElement('li');
+    if (!match) {
+      row.className = 'entry-checklist-heading';
+      row.textContent = heading.exec(line)[1];
+      list.append(row);
+      continue;
+    }
     const control = document.createElement('button');
     control.type = 'button';
     control.setAttribute('aria-pressed', String(match[1].toLowerCase() === 'x'));

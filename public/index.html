@@ -6,18 +6,18 @@
 <title>Milog</title>
 <link rel="stylesheet" href="screen/timeline.css?v=eab09429730e">
 <script src="screen/timeline.js?v=af426774d2e9" defer></script>
-<link rel="stylesheet" href="screen/account.css?v=78213e373bc7">
+<link rel="stylesheet" href="screen/account.css?v=c86f79bd1ec5">
 <script src="screen/supabase.js?v=ec004176d101" defer></script>
 <script src="screen/config.js?v=3b94fdbb790b" defer></script>
 <script src="screen/sky.js?v=9553175b580d" defer></script>
-<script src="screen/locale.js?v=0ef16ffcde68" defer></script>
-<script src="screen/account.js?v=6d207563973c" defer></script>
-<script src="screen/compose.js?v=fb1d7127a136" defer></script>
-<script src="screen/quick.js?v=3ffd1fde649b" defer></script>
-<script src="screen/emoji.js?v=5c984c13e0bb" defer></script>
-<script src="screen/entry-tools.js?v=c64f1fa74929" defer></script>
-<script src="screen/desktop.js?v=8c5d2c7217ba" defer></script>
-<script src="screen/special.js?v=0ea3481aaddf" defer></script>
+<script src="screen/locale.js?v=d58a172d6f9d" defer></script>
+<script src="screen/account.js?v=0bcbf8898b0c" defer></script>
+<script src="screen/compose.js?v=d476006ac1f9" defer></script>
+<script src="screen/quick.js?v=9594a32c8874" defer></script>
+<script src="screen/emoji.js?v=63740848c311" defer></script>
+<script src="screen/entry-tools.js?v=b5dac9d78b23" defer></script>
+<script src="screen/desktop.js?v=2a3c20394ae8" defer></script>
+<script src="screen/special.js?v=fd5b7e9cd75e" defer></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap"><link rel="icon" type="image/svg+xml" href="assets/milog-logo.svg"></head>
 <body>
 <main class="phone" aria-label="Milog Timeline">
@@ -28,11 +28,11 @@
     <button type="button" data-click="today">⌂ <span>Today</span></button>
     <button type="button" data-click="log-view">▧ <span>Journal</span></button>
     <button type="button" data-click="agenda-view">▤ <span>Agenda</span></button>
-    <button type="button" data-click="calendar-view">▦ <span>Calendar</span></button>
+    <button type="button" data-click="calendar-view"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 10h18m-13 5h2m4 0h2"/></svg><span>Calendar</span></button>
     <button type="button" data-special-days><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z"/></svg><span>Special days</span></button>
   </nav>
   <section class="desk-quick"><h2 id="desk-quick-title">Quick logs</h2><button type="button" id="desk-quick-back" hidden>‹ Back</button><div id="desk-shortcuts"></div><button type="button" data-click="quick-logs">All quick logs <span aria-hidden="true">›</span></button></section>
-  <footer><button type="button" data-click="profile-toggle" id="desk-profile" aria-label="Profile"></button><button type="button" data-click="settings-toggle">Settings</button></footer>
+  <footer><button type="button" data-click="profile-toggle" id="desk-profile" aria-label="Profile"></button><button type="button" data-click="settings-toggle" id="desk-settings" aria-label="Page settings" title="Page settings"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="m9 3 .8 2.3h4.4L15 3l2.7 1.5-.5 2.5 2.2 2 2.5-.1.9 3-2.2 1.3-.8 2.9 1.4 2-2 2.4-2.3-.9-2.6 1.2-.5 2.2h-3.6l-.5-2.2-2.6-1.2-2.3.9-2-2.4 1.4-2-.8-2.9L1.2 12l.9-3 2.5.1 2.2-2-.5-2.5z"/><circle cx="12" cy="12" r="3"/></svg></button></footer>
 </aside>
 <section class="desktop-heading" hidden aria-label="Çalışma alanı">
   <nav class="desk-tabs" aria-label="Görünümler"><button type="button" data-click="log-view"><span>Journal</span></button><button type="button" data-click="agenda-view"><span>Agenda</span></button></nav>
@@ -42,7 +42,7 @@
 <section class="desk-inline" id="desk-inline" hidden>
   <form id="desk-inline-form">
     <div class="desk-inline-date"><details class="entry-mode"><summary id="desk-inline-title">New entry</summary><div><button type="button" data-entry-mode="entry">Entry</button><button type="button" data-entry-mode="list">Checklist</button><button type="button" data-entry-mode="reminder">Reminder</button></div></details><button type="button" id="desk-inline-day" aria-haspopup="dialog"></button><button type="button" id="desk-inline-time" aria-haspopup="dialog"></button></div>
-    <div id="desk-list-items" hidden></div><label id="desk-reminder-time" hidden>Remind me at <input type="datetime-local"></label><textarea id="desk-inline-text" aria-label="Entry text" placeholder="What’s happening?"></textarea>
+    <div id="desk-list-items" hidden></div><div id="desk-reminder-time" hidden><span>Remind me at</span><button type="button" id="desk-reminder-day" aria-haspopup="dialog">Date</button><button type="button" id="desk-reminder-clock" aria-haspopup="dialog">Time</button></div><textarea id="desk-inline-text" rows="1" aria-label="Entry text" placeholder="What’s happening?"></textarea>
     <footer><button type="button" id="desk-inline-reset" hidden>Reset</button><button type="submit">Save</button></footer>
     <p id="desk-inline-status" role="status"></p>
   </form>
@@ -107,6 +107,7 @@
   <form method="dialog" class="screen-header"><h2 id="timeline-settings-title"></h2><button aria-label="Close">×</button></form>
   <button id="settings-mobile-view" type="button">Switch to mobile view</button>
   <label>Scroll order <select id="timeline-direction"><option value="newest">Newer days above</option><option value="oldest">Older days above</option></select></label>
+  <label id="timeline-compact-row" hidden><input id="timeline-compact" type="checkbox"> Show empty journal pages compactly</label>
   <label id="timeline-sort-row"><input id="timeline-sort" type="checkbox"> Geç saatler üstte</label>
 </dialog>
 <dialog id="timeline-activity" class="bottom-sheet"><form method="dialog" class="screen-header"><h2>Recent activity</h2><button aria-label="Close">×</button></form><div id="web-activity-list"></div></dialog>
@@ -180,7 +181,7 @@
 <dialog id="quick-editor" class="bottom-sheet">
   <form id="quick-editor-form">
     <header class="screen-header"><h2 id="quick-editor-title">New quick log</h2><button type="button" id="quick-editor-x" aria-label="Close">×</button></header>
-    <div class="quick-editor-main"><input id="quick-emoji" aria-label="Icon" placeholder="Icon" list="quick-symbols"><input id="quick-label" aria-label="Button name" placeholder="Button name: Kahve" maxlength="60" required></div>
+    <div class="quick-editor-main"><div class="quick-symbol-field"><span id="quick-symbol-preview"></span><input id="quick-emoji" aria-label="Icon" placeholder="Icon" list="quick-symbols"></div><input id="quick-label" aria-label="Button name" placeholder="Button name: Kahve" maxlength="60" required></div>
     <datalist id="quick-symbols"><option value="💧"><option value="☕"><option value="🚶"><option value="mdi:youtube"><option value="mdi:brain"></datalist>
     <details><summary>Customize entry text</summary><label>Entry text<input id="quick-text"></label></details>
     <fieldset class="quick-list-field"><legend>Lists</legend><div id="quick-editor-lists"></div></fieldset>

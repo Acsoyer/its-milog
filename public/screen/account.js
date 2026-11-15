@@ -129,6 +129,13 @@ profileTheme.addEventListener('change', () => {
 updateTheme();
 let editedLog = null;
 let currentDetail = null;
+const compactJournal = document.querySelector('#timeline-compact');
+compactJournal.checked = localStorage.getItem('milog-compact-journal') === 'true';
+compactJournal.addEventListener('change', () => {
+  localStorage.setItem('milog-compact-journal', String(compactJournal.checked));
+  timeline.classList.toggle('compact-journal', compactJournal.checked);
+});
+timeline.classList.toggle('compact-journal', compactJournal.checked);
 sortToggle.checked = localStorage.getItem('milog-late-on-top') === 'true';
 sortToggle.addEventListener('change', () => {
   localStorage.setItem('milog-late-on-top', String(sortToggle.checked));
@@ -137,13 +144,15 @@ sortToggle.addEventListener('change', () => {
 document.querySelector('#settings-toggle').addEventListener('click', () => {
   document.querySelector('#timeline-settings-open').textContent = agenda ? 'Agenda settings' : 'Journal settings';
   if (desktopMode()) {
-    document.querySelector('#timeline-settings-title').textContent = 'Settings';
+    document.querySelector('#timeline-settings-title').textContent = 'Page settings';
+    document.querySelector('#timeline-compact-row').hidden = false;
     document.querySelector('#timeline-sort-row').hidden = !agenda;
     openWorkPanel(timelineSettings);
   } else timelineMenu.showModal();
 });
 timelineMenu.addEventListener('click', (event) => { if (event.target === timelineMenu) timelineMenu.close(); });
 document.querySelector('#timeline-settings-open').addEventListener('click', (event) => {
+  document.querySelector('#timeline-compact-row').hidden = true;
   document.querySelector('#timeline-settings-title').textContent = event.currentTarget.textContent;
   document.querySelector('#timeline-sort-row').hidden = !agenda;
   timelineMenu.close();
@@ -620,8 +629,16 @@ function renderLogs(logs) {
     const record = document.createElement('button');
     record.className = 'record';
     const body = document.createElement('span');
-    body.textContent = desktopMode() && localStorage.getItem(entryFlag(log, 'hidden')) ? 'Hidden entry' : [log.emoji, log.body].filter(Boolean).join(' ');
-    if (desktopMode() && localStorage.getItem(entryFlag(log, 'highlight'))) entry.classList.add('entry-highlight');
+    const hidden = desktopMode() && localStorage.getItem(entryFlag(log, 'hidden'));
+    const locationSuffix = desktopMode() && !hidden ? /(?:^|\n\n)📍 ([^\n]+)$/.exec(log.body) : null;
+    const place = !hidden && desktopMode() && (log.location || locationSuffix?.[1]);
+    if (place) {
+      const label = document.createElement('span');
+      label.className = 'journal-location';
+      label.textContent = '📍 ' + place;
+      header.insertBefore(label, more);
+    }
+    body.textContent = hidden ? 'Hidden entry' : [log.emoji, locationSuffix ? log.body.slice(0, locationSuffix.index) : log.body].filter(Boolean).join(' ');
     record.append(body);
 
     if (!localStorage.getItem(entryFlag(log, 'hidden'))) appendPolaroid(record, log);

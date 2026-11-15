@@ -20,6 +20,7 @@
   let suppressClick = false;
 
   function icon(value) {
+    value = typeof value === 'string' ? value.replace(/^emoji:/, '') : '';
     const node = document.createElement('span');
     node.className = 'quick-icon';
     node.setAttribute('aria-hidden', 'true');
@@ -402,6 +403,8 @@
     get('quick-label').value = item?.label ?? '';
     get('quick-text').value = item?.entryText ?? '';
     get('quick-emoji').value = item?.emoji ?? '';
+    updateQuickSymbol();
+    editor.classList.toggle('quick-edit-popup', Boolean(item));
     get('quick-unit').value = item?.measurementUnit ?? 'none';
     get('quick-values').value = (item?.measurementOptions?.length ? item.measurementOptions : item?.durationOptions ?? []).join(', ');
     const assignments = data.organization.assignments?.[item?.id] ?? [];
@@ -416,6 +419,11 @@
     if (!list.childElementCount) list.textContent = 'Create a list in Manage quick logs to assign entries.';
     editor.showModal();
   }
+
+  function updateQuickSymbol() {
+    get('quick-symbol-preview').replaceChildren(icon(get('quick-emoji').value.trim()));
+  }
+  get('quick-emoji').addEventListener('input', updateQuickSymbol);
 
   get('quick-editor-form').addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -470,6 +478,14 @@
         drawDesktopShortcuts();
       });
       shortcut.append(icon(item.category ? item.icon || 'mdi:folder-open-outline' : item.emoji), document.createTextNode(item.label));
+      shortcut.classList.toggle('quick-shortcut-folder', item.category);
+      if (!item.category) {
+        const hint = document.createElement('small');
+        hint.className = 'quick-shortcut-hint';
+        hint.setAttribute('aria-hidden', 'true');
+        hint.textContent = { duration: 'TIME', volume: 'ML', count: 'COUNT' }[item.measurementUnit] ?? (item.durationOptions?.length ? 'TIME' : '+ Add');
+        shortcut.append(hint);
+      }
       shortcuts.append(shortcut);
     }
   }

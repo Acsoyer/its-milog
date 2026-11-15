@@ -54,6 +54,7 @@ function setComposeAgendaSlot(slot) {
 }
 
 function updateComposeFields() {
+  growEntryField(composeBody);
   updateComposeDirty();
   dateButton.textContent = start.toLocaleDateString(milogLocale, { day: 'numeric', month: 'short', year: 'numeric' });
   const time = timeFormat.format(start) + (end ? ' – ' + formatEnd(start, end) : '');
