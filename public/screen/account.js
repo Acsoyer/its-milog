@@ -887,12 +887,14 @@ signout.addEventListener('click', async () => {
   if (error) showPanel('Could not sign out', 'Try again.');
 });
 
-client.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) showAccount();
-  if (session && (event === 'INITIAL_SESSION' || (event === 'SIGNED_IN' && !gate.hidden))) {
-    setTimeout(() => showTimeline(session), 0);
-  }
-});
+document.addEventListener('DOMContentLoaded', () => {
+  client.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) showAccount();
+    if (session && (event === 'INITIAL_SESSION' || (event === 'SIGNED_IN' && !gate.hidden))) {
+      setTimeout(() => showTimeline(session), 0);
+    }
+  });
+}, { once: true });
 
 document.querySelector('#auth-fields').disabled = false;
 modeButton.disabled = false;
