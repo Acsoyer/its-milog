@@ -497,7 +497,7 @@
   .desk-inline button[type=submit] { background: #173b67; color: white; }
   #desk-inline-status { margin: 0; }
   #desk-inline-status:empty { display: none; }
-  :root.milog-signed-in:not(.force-mobile) .phone .timeline { grid-row: 3; padding-top: 8px; }
+  :root.milog-signed-in:not(.force-mobile) .phone .timeline { grid-row: 3; }
   :root.milog-signed-in:not(.force-mobile) .timeline:not(.agenda-view) .day { min-height: 100%; }
   :root.milog-signed-in:not(.force-mobile) .timeline:not(.agenda-view) .entry { border: 0; margin-top: 0; }
   #desk-search { width: 100%; background: #f6f3ed; border: 1px solid var(--rule); border-radius: 999px; padding: 10px 13px; margin-bottom: 18px; }
