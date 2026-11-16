@@ -863,8 +863,8 @@ function openCompose(text) {
   openComposeEditor(typeof text === 'string' ? text : '');
 }
 document.querySelector('#create-log').addEventListener('click', openCompose);
-document.querySelector('#compose-cancel').addEventListener('click', closeComposeEditor);
-document.querySelector('#compose-close').addEventListener('click', closeComposeEditor);
+document.querySelector('#compose-cancel').addEventListener('click', () => closeComposeEditor());
+document.querySelector('#compose-close').addEventListener('click', () => closeComposeEditor());
 composeForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const session = activeSession;
