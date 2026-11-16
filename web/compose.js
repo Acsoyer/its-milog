@@ -24,7 +24,7 @@ let pickerInitialTime;
 const pickerNow = document.querySelector('#picker-now');
 const composeReset = document.querySelector('#compose-reset');
 
-function openComposeEditor(text, existingDate) {
+function openComposeEditor(text, existingDate, inlineEdit = false) {
   const now = new Date();
   const slot = agenda && selectedAgendaSlot?.startsWith(selectedDate + 'T') ? selectedAgendaSlot : null;
   start = existingDate ? new Date(existingDate) : slot ? new Date(slot) : now;
@@ -42,8 +42,10 @@ function openComposeEditor(text, existingDate) {
   document.querySelector('#compose-date-row').hidden = agenda;
   agendaControls.hidden = !agenda;
   composeBody.placeholder = agenda ? 'What are you planning?' : 'What’s happening?';
-  openWorkPanel(compose);
+  if (inlineEdit) showDesktopEntryEditor();
+  else openWorkPanel(compose);
   updateComposeFields();
+  if (inlineEdit) composeBody.focus({ preventScroll: true });
 }
 
 function setComposeAgendaSlot(slot) {

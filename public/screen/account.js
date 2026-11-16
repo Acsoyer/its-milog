@@ -241,7 +241,7 @@ document.querySelector('#detail-share').addEventListener('click', async () => {
 document.querySelector('#detail-edit').addEventListener('click', () => {
   editedLog = currentDetail;
   closeEntryDetail();
-  openComposeEditor(editedLog.body, editedLog.created_at);
+  openComposeEditor(editedLog.body, editedLog.created_at, desktopMode());
   document.querySelector('#compose-title').textContent = 'Edit entry';
 });
 document.querySelector('#detail-delete').addEventListener('click', async (event) => {
@@ -307,6 +307,7 @@ function showAccount() {
   document.querySelector('#desk-search').value = '';
   renderDesktopSearch();
   document.querySelector('#desk-inline-form').reset();
+  closeComposeEditor();
   closeEntryDetail();
   clearEntryTools(document.querySelector('#desk-inline-form'));
   refreshInlineDirty();
@@ -414,13 +415,13 @@ function makeAgendaDay(date, scheduled) {
       selectedDate = day.dataset.date;
       updateRail();
       if (desktopMode() && selectedAgendaSlot) selectInlineAgendaSlot(selectedAgendaSlot);
-      if (desktopMode() && compose.open) setComposeAgendaSlot(row.dataset.slot);
+      if (desktopMode() && compose.open && compose.parentElement !== inlinePreview) setComposeAgendaSlot(row.dataset.slot);
     });
     row.addEventListener('dblclick', () => {
       if (!desktopMode()) return;
       selectedAgendaSlot = row.dataset.slot;
       row.setAttribute('aria-pressed', 'true');
-      if (compose.open) setComposeAgendaSlot(row.dataset.slot);
+      if (compose.open && compose.parentElement !== inlinePreview) setComposeAgendaSlot(row.dataset.slot);
       else openCompose();
     });
     const slotRow = document.createElement('div');
@@ -436,7 +437,7 @@ function makeAgendaDay(date, scheduled) {
         selectedDate = day.dataset.date;
         timeline.querySelector('.agenda-hour[aria-pressed=true]')?.setAttribute('aria-pressed', 'false');
         row.setAttribute('aria-pressed', 'true');
-        if (compose.open) setComposeAgendaSlot(row.dataset.slot);
+        if (compose.open && compose.parentElement !== inlinePreview) setComposeAgendaSlot(row.dataset.slot);
         else openCompose();
       });
       slotRow.append(add);
@@ -676,7 +677,10 @@ function renderLogs(logs) {
     if (!localStorage.getItem(entryFlag(log, 'hidden'))) appendPolaroid(record, log);
     record.addEventListener('click', () => openLogDetail(log));
     entry.append(header, record);
-    if (checklist) entry.append(checklist);
+    if (checklist) {
+      if (!record.querySelector('img')) record.classList.add('checklist-spacer');
+      entry.append(checklist);
+    }
     days.get(key).append(entry);
   }
   if (desktopMode() && !days.has(shiftDate(selectedDate, 0).toLocaleDateString(milogLocale))) {
@@ -853,13 +857,14 @@ calendar.addEventListener('close', () => {
   switchView(true);
 });
 function openCompose(text) {
+  closeComposeEditor();
   editedLog = null;
   composeStatus.textContent = '';
   openComposeEditor(typeof text === 'string' ? text : '');
 }
 document.querySelector('#create-log').addEventListener('click', openCompose);
-document.querySelector('#compose-cancel').addEventListener('click', () => compose.close());
-document.querySelector('#compose-close').addEventListener('click', () => compose.close());
+document.querySelector('#compose-cancel').addEventListener('click', closeComposeEditor);
+document.querySelector('#compose-close').addEventListener('click', closeComposeEditor);
 composeForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const session = activeSession;
@@ -889,7 +894,7 @@ composeForm.addEventListener('submit', async (event) => {
   }
   composeForm.reset();
   clearEntryTools(composeForm);
-  compose.close();
+  closeComposeEditor();
   await showTimeline(session);
   if (calendar.open) renderCalendar();
 });

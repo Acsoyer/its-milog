@@ -101,6 +101,7 @@ setInterval(updateDesktopClock, 1000);
 desktopQuery.addEventListener('change', closeWorkPanels);
 mobileLayout.addEventListener('change', closeWorkPanels);
 function closeWorkPanels() {
+  closeComposeEditor();
   closeEntryDetail();
   for (const dialog of [calendar, detail, compose, quickManager, webAccount, drawer, timelineSettings, document.querySelector('#special-days')]) dialog.close();
 }
@@ -202,6 +203,7 @@ for (const [id, direction] of [['desk-month-prev', -1], ['desk-month-next', 1]])
 const inline = document.querySelector('#desk-inline-form');
 const inlineText = document.querySelector('#desk-inline-text');
 const inlinePreview = document.querySelector('#desk-entry-preview');
+const composeHome = compose.parentElement;
 const detailCard = detail.querySelector('article');
 const entryMenu = document.querySelector('#desk-entry-menu');
 for (const [action, path] of Object.entries({
@@ -220,9 +222,24 @@ for (const [action, path] of Object.entries({
   button.title = label.textContent;
 }
 function showDesktopEntryPreview() {
+  if (compose.parentElement === inlinePreview) closeComposeEditor();
   inline.hidden = true;
   inlinePreview.hidden = false;
   inlinePreview.append(detailCard);
+}
+function showDesktopEntryEditor() {
+  compose.close();
+  inline.hidden = true;
+  inlinePreview.hidden = false;
+  inlinePreview.append(compose);
+  compose.show();
+}
+function closeComposeEditor() {
+  compose.close();
+  if (compose.parentElement !== inlinePreview) return;
+  composeHome.append(compose);
+  inlinePreview.hidden = true;
+  inline.hidden = false;
 }
 function isEntryDetailVisible() {
   return detail.open || !inlinePreview.hidden;

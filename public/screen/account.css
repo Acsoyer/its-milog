@@ -856,3 +856,55 @@
   #desk-calendar-entries button { border: 1px solid transparent; border-bottom-color: var(--rule); border-radius: 8px; }
   #desk-calendar-entries button:is(:hover, :focus-visible) { border-color: color-mix(in srgb, currentColor 18%, transparent); }
 }
+@media (min-width: 980px) and (hover: hover) and (pointer: fine) {
+  :root.milog-signed-in:not(.force-mobile) .timeline .record > span,
+  :root.milog-signed-in:not(.force-mobile) .agenda-record > span { text-align: justify; text-align-last: start; }
+  :root.milog-signed-in:not(.force-mobile) .timeline:not(.agenda-view) .entry:not(:last-of-type) {
+    box-shadow: 0 2px 0 var(--rule);
+    margin-bottom: 2px;
+  }
+  :root.milog-signed-in:not(.force-mobile) .timeline .checklist-spacer { display: none; }
+  :root.milog-signed-in:not(.force-mobile) .timeline .entry-checklist {
+    --list-indent: 26px;
+    margin: 0; padding: 0;
+  }
+  :root.milog-signed-in:not(.force-mobile) .agenda-entry .entry-checklist {
+    --list-indent: calc(52 * var(--u) + 13px);
+  }
+  :root.milog-signed-in:not(.force-mobile) .timeline .entry-checklist li {
+    min-height: var(--ruled-line);
+    padding-inline: var(--list-indent) 6px;
+    line-height: var(--ruled-line);
+    background-image: repeating-linear-gradient(to bottom, transparent 0 calc(var(--ruled-line) - 1px), var(--paper-line, var(--rule)) calc(var(--ruled-line) - 1px) var(--ruled-line));
+    overflow-wrap: anywhere;
+  }
+  :root.milog-signed-in:not(.force-mobile) .timeline .entry-checklist button {
+    display: flex; align-items: flex-start; min-height: var(--ruled-line); padding: 0;
+    font: inherit; line-height: inherit; overflow-wrap: anywhere;
+  }
+  :root.milog-signed-in:not(.force-mobile) .timeline .entry-checklist button::before {
+    margin-top: calc((var(--ruled-line) - 17px) / 2);
+  }
+  :root.milog-signed-in:not(.force-mobile) .phone #desk-entry-preview #compose-dialog[open] {
+    position: static; inset: auto; width: 100%; height: auto; max-height: 54dvh;
+    margin: 0; padding: 0; border: 0; border-radius: 10px; background: transparent; color: inherit; overflow: auto;
+  }
+  #desk-entry-preview #compose-form { min-height: 0; }
+  #desk-entry-preview #compose-dialog.full-screen .screen-header { min-height: 42px; padding: 0 10px; }
+  #desk-entry-preview #compose-dialog .compose-writing { grid-template-rows: auto auto auto; padding: 0 10px; }
+  #desk-entry-preview #compose-dialog #compose-body { min-height: 76px; margin-inline: 0; }
+  #desk-entry-preview #compose-dialog :is(.entry-tools, .entry-tools-preview) { margin-inline: 0; }
+  #desk-entry-preview #compose-dialog .compose-actions { justify-content: flex-end; margin: 0; padding: 6px 10px; }
+  #desk-entry-preview #compose-dialog .compose-actions button { flex: 0 0 auto; padding: 8px 14px; }
+  #desk-entry-preview #compose-dialog .compose-actions button[type=submit]:not(:disabled) { background: #173b67; }
+  :root.milog-signed-in:not(.force-mobile) .desktop-context {
+    width: 100%; min-width: 0; min-height: 0; overflow: hidden; box-sizing: border-box;
+  }
+  .desktop-context > :is(input, header, #desk-month) { flex: none; }
+  #desk-month { width: 100%; box-sizing: border-box; }
+  .desk-days { grid-template-rows: 24px repeat(6, 29px); }
+  #desk-search-results { max-height: 22dvh; overflow: auto; flex-shrink: 1; }
+  #desk-calendar-selection:not([hidden]) { min-height: 0; min-width: 0; }
+  #desk-calendar-entries { min-height: 0; overflow: auto; scrollbar-gutter: stable; }
+  #desk-calendar-selection .calendar-selection-heading, #desk-calendar-selection label { flex: none; }
+}
