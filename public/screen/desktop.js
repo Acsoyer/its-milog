@@ -241,6 +241,9 @@ function closeComposeEditor() {
   inlinePreview.hidden = true;
   inline.hidden = false;
 }
+compose.addEventListener('close', () => {
+  if (!compose.open && compose.parentElement === inlinePreview) closeComposeEditor();
+});
 function isEntryDetailVisible() {
   return detail.open || !inlinePreview.hidden;
 }
