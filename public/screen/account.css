@@ -32,7 +32,6 @@
 .toolbar img { position: absolute; left: 50%; transform: translateX(-50%); width: 46px; pointer-events: none; }
 .toolbar .avatar, .drawer-avatar { width: 44px; height: 44px; background: #e5e6eb; border-radius: 50%; color: #333; overflow: hidden; display: grid; place-items: center; padding: 0; }
 .toolbar .avatar img, .drawer-avatar img { position: static; transform: none; width: 100%; height: 100%; object-fit: cover; }
-#settings-toggle { font-size: 23px; }
 .phone .timeline { padding: 10px 14px 18px; position: relative; min-height: 0; }
 .timeline .day { margin-bottom: 12px; min-height: 100%; background: #f6f2eb; position: relative; }
 .timeline:not(.agenda-view) .day {
@@ -323,18 +322,13 @@
 #detail-body { font-size: calc(17 * var(--u)); white-space: pre-wrap; overflow-wrap: anywhere; }
 #web-log-detail footer { border-top: 1px solid var(--rule); margin-top: 24px; padding-top: 12px; justify-content: flex-end; }
 #detail-delete { color: #a84c44; }
-#timeline-menu { position: fixed; inset: calc(88 * var(--u)) max(12px, calc((100vw - var(--frame-width)) / 2 + 12px)) auto auto; margin: 0; padding: 6px; border: 1px solid var(--rule); border-radius: 14px; box-shadow: 0 5px 15px #0003; }
-#timeline-menu::backdrop { background: transparent; }
-#timeline-menu button { display: block; width: 100%; padding: 10px; text-align: left; font-weight: 700; }
 #profile-account { width: 100%; text-align: left; padding: 12px 0; border-block: 1px solid var(--rule); font-weight: 700; }
 .web-account-content { padding: 24px; }
 .auth-desktop-logo { display: none; }
 .google-signup { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 13px; background: white; border: 1px solid var(--rule); border-radius: 999px; font-weight: 700; cursor: default; }
 .google-signup span { font-size: 19px; font-weight: 900; color: #4285f4; }
-#settings-toggle svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
 .sky-light-logo .toolbar > img { filter: brightness(0) invert(1); }
 .toolbar > img { max-height: 46px; object-fit: contain; }
-.desktop-layout-toggle { display: flex; gap: 8px; align-items: center; padding: 10px; border-top: 1px solid var(--rule); font-weight: 700; }
 #profile-drawer { box-sizing: border-box; width: calc(var(--frame-width) * .82); max-width: none; padding: 0; background: #fff; color: #171716; }
 #profile-drawer[open] { display: flex; flex-direction: column; }
 #profile-drawer > form { position: absolute; top: max(5px, env(safe-area-inset-top)); left: 12px; }
@@ -369,7 +363,6 @@
   :root.milog-signed-in:not(.force-mobile) .day-rail { right: max(10px, calc((100% - 880px) / 2)); }
   :root.milog-signed-in:not(.force-mobile) .floating-create { right: max(22px, calc((100% - 820px) / 2 + 22px)); }
   :root.milog-signed-in:not(.force-mobile) #profile-drawer { left: calc((100vw - var(--desktop-width)) / 2); width: min(380px, 82vw); }
-  :root.milog-signed-in:not(.force-mobile) #timeline-menu { right: max(12px, calc((100vw - var(--desktop-width)) / 2 + 12px)); }
 }
 .desktop-sidebar, .desktop-heading, .desktop-context { display: none; }
 @media (min-width: 980px) and (hover: hover) and (pointer: fine) {
@@ -437,7 +430,6 @@
   :root.milog-signed-in:not(.force-mobile) #quick-manager-add { bottom: 86px; }
   :root.milog-signed-in:not(.force-mobile) #calendar-grid button { min-height: 38px; }
   :root.milog-signed-in:not(.force-mobile) #web-log-detail article { background: #fff; padding: 18px; }
-  :root.milog-signed-in:not(.force-mobile) #timeline-menu { inset: auto auto 54px max(12px, calc((100vw - var(--desktop-width)) / 2 + 12px)); }
   :root.milog-signed-in:not(.force-mobile) .theme-dark :is(.desktop-sidebar, .desktop-context, .timeline .day) { background: #28262c; }
   :root.milog-signed-in:not(.force-mobile) .theme-dark.phone { background: #201e23; }
 }
@@ -602,9 +594,7 @@
 @media (prefers-reduced-motion: reduce) {
   .phone > dialog { transition: none !important; }
 }
-#settings-mobile-view { display: none; }
 @media (min-width: 980px) and (hover: hover) and (pointer: fine) {
-  :root.milog-signed-in:not(.force-mobile) #settings-mobile-view { display: block; margin: 16px; padding: 9px 12px; background: #eaf0f6; color: #173b67; border-radius: 8px; }
   .desktop-heading #desk-date { max-width: clamp(105px, 14vw, 210px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 #profile-drawer > form { position: absolute; left: auto; right: 14px; top: max(12px, env(safe-area-inset-top)); }
@@ -796,8 +786,6 @@
   .timeline.compact-journal:not(.agenda-view) .desk-empty-day:not(:has(.celebration))::after,
   .timeline.compact-journal:not(.agenda-view) .desk-empty-day:not(:has(.celebration)) .journal-empty { display: none; }
   .journal-location { flex: 1; min-width: 0; margin-inline: 10px; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #desk-settings { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; }
-  #desk-settings svg { width: 20px; height: 20px; }
   .desktop-sidebar nav button[data-click=calendar-view] svg { width: 1em; height: 1em; vertical-align: -.12em; }
   :root.milog-signed-in:not(.force-mobile) #timeline-settings > label:not([hidden]) { margin: 0 16px; padding: 12px 0; border-top: 1px solid var(--rule); align-items: center; justify-content: space-between; gap: 12px; }
   #timeline-settings > label[hidden] { display: none !important; }
@@ -908,3 +896,6 @@
   #desk-calendar-entries { min-height: 0; overflow: auto; scrollbar-gutter: stable; }
   #desk-calendar-selection .calendar-selection-heading, #desk-calendar-selection label { flex: none; }
 }
+
+#timeline-settings > label[hidden] { display: none !important; }
+#timeline-settings #timeline-activity-open { margin: 12px 16px; padding: 8px 12px; border: 1px solid var(--rule); border-radius: 8px; }

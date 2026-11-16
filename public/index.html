@@ -6,12 +6,12 @@
 <title>Milog</title>
 <link rel="stylesheet" href="screen/timeline.css?v=eab09429730e">
 <script src="screen/timeline.js?v=af426774d2e9" defer></script>
-<link rel="stylesheet" href="screen/account.css?v=43abf69a8ed0">
+<link rel="stylesheet" href="screen/account.css?v=c8a97a90996d">
 <script src="screen/supabase.js?v=ec004176d101" defer></script>
 <script src="screen/config.js?v=3b94fdbb790b" defer></script>
 <script src="screen/sky.js?v=9553175b580d" defer></script>
 <script src="screen/locale.js?v=767e550552b4" defer></script>
-<script src="screen/account.js?v=7d892b02e5f1" defer></script>
+<script src="screen/account.js?v=d1999d09b243" defer></script>
 <script src="screen/compose.js?v=55ba489a08ac" defer></script>
 <script src="screen/quick.js?v=b936456ae795" defer></script>
 <script src="screen/emoji.js?v=63740848c311" defer></script>
@@ -32,7 +32,7 @@
     <button type="button" data-special-days><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z"/></svg><span>Special days</span></button>
   </nav>
   <section class="desk-quick"><h2 id="desk-quick-title">Quick logs</h2><button type="button" id="desk-quick-back" hidden>‹ Back</button><div id="desk-shortcuts"></div><button type="button" data-click="quick-logs">All quick logs <span aria-hidden="true">›</span></button></section>
-  <footer><button type="button" data-click="profile-toggle" id="desk-profile" aria-label="Profile"></button><button type="button" data-click="settings-toggle" id="desk-settings" aria-label="Page settings" title="Page settings"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="m9 3 .8 2.3h4.4L15 3l2.7 1.5-.5 2.5 2.2 2 2.5-.1.9 3-2.2 1.3-.8 2.9 1.4 2-2 2.4-2.3-.9-2.6 1.2-.5 2.2h-3.6l-.5-2.2-2.6-1.2-2.3.9-2-2.4 1.4-2-.8-2.9L1.2 12l.9-3 2.5.1 2.2-2-.5-2.5z"/><circle cx="12" cy="12" r="3"/></svg></button></footer>
+  <footer><button type="button" data-click="profile-toggle" id="desk-profile" aria-label="Profile"></button></footer>
 </aside>
 <section class="desktop-heading" hidden aria-label="Çalışma alanı">
   <nav class="desk-tabs" aria-label="Görünümler"><button type="button" data-click="log-view"><span>Journal</span></button><button type="button" data-click="agenda-view"><span>Agenda</span></button></nav>
@@ -63,7 +63,7 @@
     <button class="avatar" id="profile-toggle" aria-label="Profili aç">M</button>
     <img src="assets/milog-logo.svg" alt="Milog" width="54">
     <button id="calendar-search-toggle" aria-label="Kayıt ara" aria-expanded="false" aria-controls="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></button>
-    <button id="settings-toggle" aria-label="Ayarlar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 3 .8 2.3h4.4L15 3l2.7 1.5-.5 2.5 2.2 2 2.5-.1.9 3-2.2 1.3-.8 2.9 1.4 2-2 2.4-2.3-.9-2.6 1.2-.5 2.2h-3.6l-.5-2.2-2.6-1.2-2.3.9-2-2.4 1.4-2-.8-2.9L1.2 12l.9-3 2.5.1 2.2-2-.5-2.5z"/><circle cx="12" cy="12" r="3"/></svg></button></header>
+  </header>
   <input id="search" type="search" aria-label="Günlük kayıtlarıda ara" placeholder="Kayıt ara" hidden>
   <section class="timeline" hidden aria-label="Günlük kayıtları"></section>
   <button class="floating-create" id="create-log" hidden aria-label="New entry"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4v24M4 16h24"/></svg></button>
@@ -79,6 +79,7 @@
   <header class="profile-identity"><div class="drawer-avatar" id="drawer-avatar"></div><div><h2 id="profile-name"></h2><p id="profile-email"></p></div></header>
   <div class="profile-rows">
     <button id="profile-account" type="button"><span aria-hidden="true">⚙</span> My account <b>›</b></button>
+    <button id="profile-page-settings" type="button">Page settings <b aria-hidden="true">›</b></button>
     <label>Language<select id="profile-language" aria-label="Language"><option value="en">English</option><option value="tr">Türkçe</option></select></label>
     <label>Location<select id="sky-city" aria-label="Location"></select></label>
     <label>Theme<button type="button" id="profile-theme-toggle" aria-label="Dark theme" aria-pressed="false"><span>☀</span><span>☾</span></button><select id="profile-theme" hidden aria-label="Theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
@@ -99,16 +100,13 @@
   </form>
   <ul id="special-days-list"></ul>
 </dialog>
-<dialog id="timeline-menu" aria-label="Timeline menüsü">
-  <button type="button" id="timeline-settings-open"></button><button type="button" id="timeline-activity-open">Recent activity</button>
-  <label class="desktop-layout-toggle"><input id="mobile-layout" type="checkbox"> Mobile view</label>
-</dialog>
 <dialog id="timeline-settings" class="bottom-sheet">
-  <form method="dialog" class="screen-header"><h2 id="timeline-settings-title"></h2><button aria-label="Close">×</button></form>
-  <button id="settings-mobile-view" type="button">Switch to mobile view</button>
+  <form method="dialog" class="screen-header"><button type="button" id="page-settings-back" aria-label="Back">‹</button><h2>Page settings</h2><button aria-label="Close">×</button></form>
+  <label id="timeline-layout-row" hidden>Mobile view <input id="mobile-layout" type="checkbox"></label>
   <label>Scroll order <select id="timeline-direction"><option value="newest">Newer days above</option><option value="oldest">Older days above</option></select></label>
   <label id="timeline-compact-row" hidden><input id="timeline-compact" type="checkbox"> Show empty journal pages compactly</label>
   <label id="timeline-sort-row"><input id="timeline-sort" type="checkbox"> Geç saatler üstte</label>
+  <button type="button" id="timeline-activity-open">Recent activity</button>
 </dialog>
 <dialog id="timeline-activity" class="bottom-sheet"><form method="dialog" class="screen-header"><h2>Recent activity</h2><button aria-label="Close">×</button></form><div id="web-activity-list"></div></dialog>
 <dialog id="web-log-detail" class="full-screen" aria-label="Kayıt detayı">

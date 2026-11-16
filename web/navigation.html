@@ -11,6 +11,7 @@
   <header class="profile-identity"><div class="drawer-avatar" id="drawer-avatar"></div><div><h2 id="profile-name"></h2><p id="profile-email"></p></div></header>
   <div class="profile-rows">
     <button id="profile-account" type="button"><span aria-hidden="true">⚙</span> My account <b>›</b></button>
+    <button id="profile-page-settings" type="button">Page settings <b aria-hidden="true">›</b></button>
     <label>Language<select id="profile-language" aria-label="Language"><option value="en">English</option><option value="tr">Türkçe</option></select></label>
     <label>Location<select id="sky-city" aria-label="Location"></select></label>
     <label>Theme<button type="button" id="profile-theme-toggle" aria-label="Dark theme" aria-pressed="false"><span>☀</span><span>☾</span></button><select id="profile-theme" hidden aria-label="Theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
@@ -31,16 +32,13 @@
   </form>
   <ul id="special-days-list"></ul>
 </dialog>
-<dialog id="timeline-menu" aria-label="Timeline menüsü">
-  <button type="button" id="timeline-settings-open"></button><button type="button" id="timeline-activity-open">Recent activity</button>
-  <label class="desktop-layout-toggle"><input id="mobile-layout" type="checkbox"> Mobile view</label>
-</dialog>
 <dialog id="timeline-settings" class="bottom-sheet">
-  <form method="dialog" class="screen-header"><h2 id="timeline-settings-title"></h2><button aria-label="Close">×</button></form>
-  <button id="settings-mobile-view" type="button">Switch to mobile view</button>
+  <form method="dialog" class="screen-header"><button type="button" id="page-settings-back" aria-label="Back">‹</button><h2>Page settings</h2><button aria-label="Close">×</button></form>
+  <label id="timeline-layout-row" hidden>Mobile view <input id="mobile-layout" type="checkbox"></label>
   <label>Scroll order <select id="timeline-direction"><option value="newest">Newer days above</option><option value="oldest">Older days above</option></select></label>
   <label id="timeline-compact-row" hidden><input id="timeline-compact" type="checkbox"> Show empty journal pages compactly</label>
   <label id="timeline-sort-row"><input id="timeline-sort" type="checkbox"> Geç saatler üstte</label>
+  <button type="button" id="timeline-activity-open">Recent activity</button>
 </dialog>
 <dialog id="timeline-activity" class="bottom-sheet"><form method="dialog" class="screen-header"><h2>Recent activity</h2><button aria-label="Close">×</button></form><div id="web-activity-list"></div></dialog>
 <dialog id="web-log-detail" class="full-screen" aria-label="Kayıt detayı">

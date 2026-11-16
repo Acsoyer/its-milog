@@ -84,7 +84,6 @@ updateSky();
 setInterval(updateSky, 60000);
 avatar.addEventListener('click', () => openWorkPanel(drawer));
 const detail = document.querySelector('#web-log-detail');
-const timelineMenu = document.querySelector('#timeline-menu');
 const timelineSettings = document.querySelector('#timeline-settings');
 const timelineActivity = document.querySelector('#timeline-activity');
 const webAccount = document.querySelector('#web-account');
@@ -103,15 +102,11 @@ function updateLayout() {
   document.documentElement.classList.toggle('force-mobile', mobileLayout.checked);
 }
 mobileLayout.addEventListener('change', () => {
+  timelineSettings.close();
   localStorage.setItem('milog-mobile-layout', String(mobileLayout.checked));
   updateLayout();
-  timelineMenu.close();
 });
 updateLayout();
-document.querySelector('#settings-mobile-view').addEventListener('click', () => {
-  timelineSettings.close();
-  mobileLayout.click();
-});
 profileTheme.value = localStorage.getItem('milog-web-theme') === 'dark' ? 'dark' : 'light';
 document.querySelector('#profile-theme-toggle').addEventListener('click', () => {
   profileTheme.value = profileTheme.value === 'dark' ? 'light' : 'dark';
@@ -141,25 +136,19 @@ sortToggle.addEventListener('change', () => {
   localStorage.setItem('milog-late-on-top', String(sortToggle.checked));
   if (agenda && accountLogs) renderLogs(accountLogs);
 });
-document.querySelector('#settings-toggle').addEventListener('click', () => {
-  document.querySelector('#timeline-settings-open').textContent = agenda ? 'Agenda settings' : 'Journal settings';
-  if (desktopMode()) {
-    document.querySelector('#timeline-settings-title').textContent = 'Page settings';
-    document.querySelector('#timeline-compact-row').hidden = false;
-    document.querySelector('#timeline-sort-row').hidden = !agenda;
-    openWorkPanel(timelineSettings);
-  } else timelineMenu.showModal();
-});
-timelineMenu.addEventListener('click', (event) => { if (event.target === timelineMenu) timelineMenu.close(); });
-document.querySelector('#timeline-settings-open').addEventListener('click', (event) => {
-  document.querySelector('#timeline-compact-row').hidden = true;
-  document.querySelector('#timeline-settings-title').textContent = event.currentTarget.textContent;
+document.querySelector('#profile-page-settings').addEventListener('click', () => {
+  drawer.close();
+  document.querySelector('#timeline-layout-row').hidden = !desktopQuery.matches;
+  document.querySelector('#timeline-compact-row').hidden = !desktopQuery.matches;
   document.querySelector('#timeline-sort-row').hidden = !agenda;
-  timelineMenu.close();
-  timelineSettings.showModal();
+  openWorkPanel(timelineSettings);
+});
+document.querySelector('#page-settings-back').addEventListener('click', () => {
+  timelineSettings.close();
+  openWorkPanel(drawer);
 });
 document.querySelector('#timeline-activity-open').addEventListener('click', () => {
-  timelineMenu.close();
+  timelineSettings.close();
   document.querySelector('#web-activity-list').textContent = 'Mobile activity history is unavailable in this session.';
   timelineActivity.showModal();
 });
@@ -318,7 +307,7 @@ function showAccount() {
   rail.hidden = true;
   activeSession = null;
   editedLog = currentDetail = null;
-  for (const dialog of [detail, timelineMenu, timelineSettings, timelineActivity, webAccount]) dialog.close();
+  for (const dialog of [detail, timelineSettings, timelineActivity, webAccount]) dialog.close();
   selectedAgendaSlot = null;
   document.querySelector('#compose-picker').close();
   for (const dialog of [drawer, calendar, compose, quickSheet, quickManager, document.querySelector('#quick-editor'), document.querySelector('#quick-folder-editor')]) dialog.close();
